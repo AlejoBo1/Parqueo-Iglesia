@@ -1,7 +1,12 @@
 [
-  { "id": 1, "ocupado": false, "usuario": "", "tipo": "", "fecha": "" },
-  { "id": 2, "ocupado": false, "usuario": "", "tipo": "", "fecha": "" },
-  { "id": 3, "ocupado": false, "usuario": "", "tipo": "", "fecha": "" },
-  { "id": 4, "ocupado": false, "usuario": "", "tipo": "", "fecha": "" },
-  { "id": 5, "ocupado": false, "usuario": "", "tipo": "", "fecha": "" }
+  { "id": 1, "ocupado": false, "placa": "", "usuario": "", "tipo": "", "fecha": "" },
+  { "id": 2, "ocupado": false, "placa": "", "usuario": "", "tipo": "", "fecha": "" },
+  { "id": 3, "ocupado": false, "placa": "", "usuario": "", "tipo": "", "fecha": "" },
+  { "id": 4, "ocupado": false, "placa": "", "usuario": "", "tipo": "", "fecha": "" },
+  { "id": 5, "ocupado": false, "placa": "", "usuario": "", "tipo": "", "fecha": "" },
+  { "id": 6, "ocupado": false, "placa": "", "usuario": "", "tipo": "", "fecha": "" },
+  { "id": 7, "ocupado": false, "placa": "", "usuario": "", "tipo": "", "fecha": "" },
+  { "id": 8, "ocupado": false, "placa": "", "usuario": "", "tipo": "", "fecha": "" },
+  { "id": 9, "ocupado": false, "placa": "", "usuario": "", "tipo": "", "fecha": "" },
+  { "id": 10, "ocupado": false, "placa": "", "usuario": "", "tipo": "", "fecha": "" }
 ]

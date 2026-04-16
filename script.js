@@ -72,23 +72,72 @@ function renderGrid() {
 // 5. Manejar el formulario de cobro
 document.getElementById('form-pago').onsubmit = (e) => {
     e.preventDefault();
+    
     const id = parseInt(document.getElementById('puesto-num').value);
+    const placa = document.getElementById('placa-carro').value.toUpperCase();
+    const nombre = document.getElementById('nombre-usuario').value;
+    const contrato = document.getElementById('tipo-contrato').value;
+    
+    // Buscamos si el puesto ya está ocupado
     const index = parqueoData.findIndex(p => p.id === id);
 
     if (index !== -1) {
+        if (parqueoData[index].ocupado) {
+            alert("⚠️ Error: Este puesto ya está ocupado por otro vehículo.");
+            return;
+        }
+
+        // Guardamos la nueva estructura con PLACA
         parqueoData[index] = {
             id: id,
             ocupado: true,
-            usuario: document.getElementById('nombre-usuario').value,
-            tipo: document.getElementById('tipo-contrato').value,
+            placa: placa, // Nueva propiedad
+            usuario: nombre,
+            tipo: contrato,
             fecha: new Date().toLocaleDateString()
         };
-        saveToLocal();
-        alert(`Puesto ${id} registrado exitosamente.`);
-        e.target.reset();
-        showSection('ingreso');
+
+        saveToLocal(); // Guarda en el navegador
+        alert(`✅ Ingreso registrado: Puesto ${id} asignado a ${placa}`);
+        
+        e.target.reset(); // Limpia el formulario
+        showSection('ingreso'); // Te manda al mapa para ver el cuadro rojo
     }
 };
+
+// 5.1 - RenderGrid: También actualicé el renderGrid para que al pasar el mouse se vea la placa
+function renderGrid() {
+    const container = document.getElementById('grid-container');
+    if(!container) return;
+    container.innerHTML = '';
+    
+    parqueoData.forEach(p => {
+        const div = document.createElement('div');
+        div.className = `puesto ${p.ocupado ? 'ocupado' : 'disponible'}`;
+        div.innerText = p.id;
+        
+        // Tooltip que muestra la placa si está ocupado
+        div.title = p.ocupado ? `PLACA: ${p.placa} | Dueño: ${p.usuario}` : 'Puesto Libre';
+        
+        div.onclick = () => {
+            if(p.ocupado) {
+                const info = `Puesto ${p.id}\nVehículo: ${p.placa}\nDueño: ${p.usuario}\nContrato: ${p.tipo}\n\n¿Desea liberar este puesto?`;
+                if(confirm(info)) {
+                    p.ocupado = false;
+                    p.placa = "";
+                    p.usuario = "";
+                    p.tipo = "";
+                    saveToLocal();
+                    renderGrid();
+                }
+            } else {
+                showSection('cobros');
+                document.getElementById('puesto-num').value = p.id;
+            }
+        };
+        container.appendChild(div);
+    });
+}
 
 // 6. Actualizar Estadísticas
 function updateStats() {

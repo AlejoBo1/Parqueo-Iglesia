@@ -25,25 +25,28 @@
         <div id="grid-container" class="grid-parqueo"></div>
     </div>
 
-    <div id="cobros" class="section">
-        <h2>Registrar Nuevo Contrato / Pago</h2>
-        <form id="form-pago">
-            <div class="form-group">
-                <label for="puesto-num">Número de Puesto:</label>
-                <input type="number" id="puesto-num" min="1" max="100" required>
-            </div>
-            <div class="form-group">
-                <label for="nombre-usuario">Nombre del Propietario:</label>
-                <input type="text" id="nombre-usuario" placeholder="Ej. Juan Pérez" required>
-            </div>
-            <div class="form-group">
-                <label for="tipo-contrato">Tipo de Contrato:</label>
-                <select id="tipo-contrato">
-                    <option value="Quincenal">Quincenal</option>
-                    <option value="Mensual">Mensual</option>
+    <div id="cobros" class="section active"> <h2>Registro de Ingreso y Contrato</h2>
+    <form id="form-pago">
+        <div class="form-group">
+            <label for="puesto-num">Número de Puesto Asignado (1-100):</label>
+            <input type="number" id="puesto-num" min="1" max="100" required placeholder="Ej: 45">
+        </div>
+        <div class="form-group">
+            <label for="placa-carro">Número de Placa:</label>
+            <input type="text" id="placa-carro" placeholder="P-123ABC" required style="text-transform: uppercase;">
+        </div>
+        <div class="form-group">
+            <label for="nombre-usuario">Nombre del Propietario:</label>
+            <input type="text" id="nombre-usuario" placeholder="Nombre completo" required>
+        </div>
+        <div class="form-group">
+            <label for="tipo-contrato">Tipo de Contrato:</label>
+            <select id="tipo-contrato">
+                <option value="Quincenal">Quincenal (Pago $25)</option>
+                <option value="Mensual">Mensual (Pago $50)</option>
                 </select>
             </div>
-            <button type="submit">Guardar Registro</button>
+            <button type="submit">Confirmar Ingreso y Guardar</button>
         </form>
     </div>
 
