@@ -1,0 +1,177 @@
+/* Variables de color para fácil personalización */
+:root {
+    --primary: #2c3e50;
+    --secondary: #34495e;
+    --accent: #3498db;
+    --success: #27ae60;
+    --danger: #e74c3c;
+    --light: #ecf0f1;
+    --dark: #212f3c;
+}
+
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 0; 
+    background: #f4f7f6; 
+    color: var(--primary); 
+}
+
+header { 
+    background: var(--primary); 
+    color: white; 
+    padding: 1.5rem; 
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Navegación */
+nav { 
+    display: flex; 
+    justify-content: center; 
+    background: var(--secondary); 
+    padding: 10px; 
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+nav button { 
+    background: transparent; 
+    border: 1px solid rgba(255,255,255,0.5); 
+    color: white; 
+    padding: 10px 20px; 
+    margin: 0 5px; 
+    cursor: pointer; 
+    border-radius: 4px; 
+    transition: all 0.3s ease;
+}
+
+nav button:hover { 
+    background: white; 
+    color: var(--primary); 
+}
+
+/* Contenedores */
+.container { 
+    max-width: 1000px; 
+    margin: 20px auto; 
+    padding: 20px; 
+}
+
+.section { 
+    display: none; 
+    animation: fadeIn 0.4s ease-in-out; 
+}
+
+.active { 
+    display: block; 
+}
+
+/* Grid del Parqueo (Los 100 puestos) */
+.grid-parqueo { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); 
+    gap: 12px; 
+    margin-top: 25px; 
+}
+
+.puesto { 
+    height: 65px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    border-radius: 6px; 
+    color: white; 
+    font-weight: bold; 
+    cursor: pointer; 
+    font-size: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.puesto:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.disponible { background-color: var(--success); }
+.ocupado { background-color: var(--danger); }
+
+/* Formulario de Cobros */
+form { 
+    background: white; 
+    padding: 30px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.form-group { margin-bottom: 20px; }
+
+label { 
+    display: block; 
+    margin-bottom: 8px; 
+    font-weight: 600; 
+}
+
+input, select { 
+    width: 100%; 
+    padding: 12px; 
+    border: 2px solid #edf2f7; 
+    border-radius: 8px; 
+    box-sizing: border-box; 
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+input:focus { border-color: var(--accent); }
+
+button[type="submit"] { 
+    background: var(--accent); 
+    color: white; 
+    border: none; 
+    padding: 14px; 
+    cursor: pointer; 
+    width: 100%; 
+    border-radius: 8px; 
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+/* Tarjetas de Estadísticas */
+.stats-cards { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+    gap: 20px; 
+    margin-bottom: 30px; 
+}
+
+.card { 
+    background: white; 
+    padding: 25px; 
+    border-radius: 12px; 
+    text-align: center; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+}
+
+.card p { margin: 0; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem; }
+.card h3 { margin: 10px 0 0; color: var(--accent); font-size: 2.2rem; }
+
+/* Visor JSON */
+#json-preview { 
+    background: var(--dark); 
+    color: #a6e22e; 
+    padding: 20px; 
+    border-radius: 8px; 
+    overflow-x: auto; 
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Animación de entrada */
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
