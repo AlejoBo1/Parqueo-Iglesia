@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Parqueo - Iglesia</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <h1>Sistema de Parqueo Fijo</h1>
+</header>
+
+<nav>
+    <button onclick="showSection('ingreso')">Mapa de Ingreso</button>
+    <button onclick="showSection('cobros')">Gestión de Cobros</button>
+    <button onclick="showSection('estadisticas')">Estadísticas</button>
+</nav>
+
+<div class="container">
+    <div id="ingreso" class="section active">
+        <h2>Mapa de Puestos (1-100)</h2>
+        <p>Haz clic en un puesto verde para asignar o en uno rojo para liberar.</p>
+        <div id="grid-container" class="grid-parqueo"></div>
+    </div>
+
+    <div id="cobros" class="section">
+        <h2>Registrar Nuevo Contrato / Pago</h2>
+        <form id="form-pago">
+            <div class="form-group">
+                <label for="puesto-num">Número de Puesto:</label>
+                <input type="number" id="puesto-num" min="1" max="100" required>
+            </div>
+            <div class="form-group">
+                <label for="nombre-usuario">Nombre del Propietario:</label>
+                <input type="text" id="nombre-usuario" placeholder="Ej. Juan Pérez" required>
+            </div>
+            <div class="form-group">
+                <label for="tipo-contrato">Tipo de Contrato:</label>
+                <select id="tipo-contrato">
+                    <option value="Quincenal">Quincenal</option>
+                    <option value="Mensual">Mensual</option>
+                </select>
+            </div>
+            <button type="submit">Guardar Registro</button>
+        </form>
+    </div>
+
+    <div id="estadisticas" class="section">
+        <div class="stats-cards">
+            <div class="card"><p>Ocupados</p><h3 id="stat-ocupados">0</h3></div>
+            <div class="card"><p>Disponibles</p><h3 id="stat-libres">100</h3></div>
+            <div class="card"><p>Ingresos Est.</p><h3>$<span id="stat-ingresos">0</span></h3></div>
+        </div>
+        <h3>Vista Previa del JSON (Datos Activos):</h3>
+        <pre id="json-preview"></pre>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
