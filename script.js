@@ -231,9 +231,31 @@ document.getElementById('form-registro-pago').onsubmit = (e) => {
     e.target.reset();
 };
 
-// Iniciar aplicación
-const inputFecha = document.getElementById('fecha-pago');
-if(inputFecha) {
-    inputFecha.value = new Date().toISOString().split('T')[0];
+
+// --- FUNCIONES DE APOYO ---
+
+function actualizarTablaMovimientos() {
+    // Por ahora solo loguea, luego aquí pondremos el código para llenar la tabla del HTML
+    console.log("Actualizando tabla de movimientos...");
 }
-loadData();
+
+// --- INICIO DE LA APLICACIÓN ---
+
+async function iniciarApp() {
+    // 1. Cargamos los datos (esto llama a renderGrid internamente)
+    await loadData();
+
+    // 2. Seteamos la fecha de hoy en el formulario de pagos
+    const inputFecha = document.getElementById('fecha-pago');
+    if(inputFecha) {
+        inputFecha.value = new Date().toISOString().split('T')[0];
+    }
+    
+    // 3. Dibujamos la tabla de movimientos por primera vez
+    actualizarTablaMovimientos();
+    
+    console.log("🚀 Aplicación iniciada correctamente");
+}
+
+// Ejecutamos el inicio
+iniciarApp();
