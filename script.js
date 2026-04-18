@@ -72,22 +72,29 @@ function renderGrid() {
         
         div.title = p.ocupado ? `PLACA: ${p.placa} | Dueño: ${p.usuario}` : 'Puesto Libre';
         
-        div.onclick = () => {
-            if(p.ocupado) {
-                const info = `Puesto ${p.id}\nVehículo: ${p.placa}\nDueño: ${p.usuario}\nContrato: ${p.tipo}\n\n¿Desea liberar este puesto?`;
+       if(p.ocupado) {
+            // 1. Pedir la contraseña antes de cualquier cosa
+            const pass = prompt(`Para liberar el puesto ${p.id}, ingresa la contraseña de administrador:`);
+            
+            if (pass === "1234") { // <--- Aquí pones la contraseña que tú quieras
+                const info = `Puesto ${p.id}\nVehículo: ${p.placa}\n¿Confirmar salida?`;
+                
                 if(confirm(info)) {
+                    // AQUÍ ES DONDE ANTES BORRÁBAMOS TODO. 
+                    // Ahora, en el futuro, aquí mandaremos el evento "SALIDA" a Google Sheets
+                    
                     p.ocupado = false;
                     p.placa = "";
                     p.usuario = "";
                     p.tipo = "";
                     saveToLocal();
                     renderGrid();
+                    alert("✅ Puesto liberado. El registro se ha guardado en el historial.");
                 }
-            } else {
-                showSection('cobros');
-                document.getElementById('puesto-num').value = p.id;
+            } else if (pass !== null) {
+                alert("❌ Contraseña incorrecta. No tienes permiso para liberar puestos.");
             }
-        };
+        }
         container.appendChild(div);
     });
 }
