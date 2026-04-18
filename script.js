@@ -1,111 +1,65 @@
 let parqueoData = [];
+let historialPagos = [];
 
-// 1. Cargar Datos iniciales
+// 1. Cargar Datos iniciales (Puestos e Historial)
 async function loadData() {
     const localData = localStorage.getItem('parqueo_db');
+    const localHistorial = localStorage.getItem('historial_pagos');
     
+    // Cargar historial si existe
+    if (localHistorial) {
+        historialPagos = JSON.parse(localHistorial);
+        actualizarListaPagos();
+    }
+
+    // Cargar puestos
     if (localData) {
         parqueoData = JSON.parse(localData);
     } else {
         try {
             const response = await fetch('data.json');
             parqueoData = await response.json();
-            // Si el JSON tiene menos de 100, rellenamos el resto
-            if (parqueoData.length < 100) {
-                for (let i = parqueoData.length + 1; i <= 100; i++) {
-                    parqueoData.push({ id: i, ocupado: false, usuario: "", tipo: "", fecha: "" });
-                }
-            }
         } catch (e) {
-            console.warn("No se pudo cargar data.json, generando datos locales...");
-            parqueoData = Array.from({ length: 100 }, (_, i) => ({
-                id: i + 1, ocupado: false, usuario: "", tipo: "", fecha: ""
-            }));
+            console.warn("No se pudo cargar data.json, generando datos iniciales...");
+            parqueoData = [];
         }
-        saveToLocal();
     }
+
+    // Asegurar que siempre haya 100 puestos con todas sus propiedades
+    if (parqueoData.length < 100) {
+        for (let i = parqueoData.length + 1; i <= 100; i++) {
+            parqueoData.push({ 
+                id: i, 
+                ocupado: false, 
+                placa: "", 
+                usuario: "", 
+                tipo: "", 
+                fecha: "" 
+            });
+        }
+    }
+    
+    saveToLocal();
     renderGrid();
 }
 
 // 2. Guardar en LocalStorage
 function saveToLocal() {
     localStorage.setItem('parqueo_db', JSON.stringify(parqueoData));
+    localStorage.setItem('historial_pagos', JSON.stringify(historialPagos));
 }
 
 // 3. Cambiar de sección
 function showSection(id) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+    const target = document.getElementById(id);
+    if(target) target.classList.add('active');
+    
     if (id === 'estadisticas') updateStats();
     if (id === 'ingreso') renderGrid();
 }
 
-// 4. Dibujar el mapa de puestos
-function renderGrid() {
-    const container = document.getElementById('grid-container');
-    container.innerHTML = '';
-    
-    parqueoData.forEach(p => {
-        const div = document.createElement('div');
-        div.className = `puesto ${p.ocupado ? 'ocupado' : 'disponible'}`;
-        div.innerText = p.id;
-        div.title = p.ocupado ? `Usuario: ${p.usuario} (${p.tipo})` : 'Disponible';
-        
-        div.onclick = () => {
-            if(p.ocupado) {
-                if(confirm(`Puesto ${p.id} ocupado por ${p.usuario}. ¿Desea liberarlo?`)) {
-                    p.ocupado = false;
-                    p.usuario = "";
-                    p.tipo = "";
-                    saveToLocal();
-                    renderGrid();
-                }
-            } else {
-                showSection('cobros');
-                document.getElementById('puesto-num').value = p.id;
-            }
-        };
-        container.appendChild(div);
-    });
-}
-
-// 5. Manejar el formulario de cobro
-document.getElementById('form-pago').onsubmit = (e) => {
-    e.preventDefault();
-    
-    const id = parseInt(document.getElementById('puesto-num').value);
-    const placa = document.getElementById('placa-carro').value.toUpperCase();
-    const nombre = document.getElementById('nombre-usuario').value;
-    const contrato = document.getElementById('tipo-contrato').value;
-    
-    // Buscamos si el puesto ya está ocupado
-    const index = parqueoData.findIndex(p => p.id === id);
-
-    if (index !== -1) {
-        if (parqueoData[index].ocupado) {
-            alert("⚠️ Error: Este puesto ya está ocupado por otro vehículo.");
-            return;
-        }
-
-        // Guardamos la nueva estructura con PLACA
-        parqueoData[index] = {
-            id: id,
-            ocupado: true,
-            placa: placa, // Nueva propiedad
-            usuario: nombre,
-            tipo: contrato,
-            fecha: new Date().toLocaleDateString()
-        };
-
-        saveToLocal(); // Guarda en el navegador
-        alert(`✅ Ingreso registrado: Puesto ${id} asignado a ${placa}`);
-        
-        e.target.reset(); // Limpia el formulario
-        showSection('ingreso'); // Te manda al mapa para ver el cuadro rojo
-    }
-};
-
-// 5.1 - RenderGrid: También actualicé el renderGrid para que al pasar el mouse se vea la placa
+// 4. Dibujar el mapa de puestos (Versión única y mejorada)
 function renderGrid() {
     const container = document.getElementById('grid-container');
     if(!container) return;
@@ -116,7 +70,6 @@ function renderGrid() {
         div.className = `puesto ${p.ocupado ? 'ocupado' : 'disponible'}`;
         div.innerText = p.id;
         
-        // Tooltip que muestra la placa si está ocupado
         div.title = p.ocupado ? `PLACA: ${p.placa} | Dueño: ${p.usuario}` : 'Puesto Libre';
         
         div.onclick = () => {
@@ -139,25 +92,55 @@ function renderGrid() {
     });
 }
 
+// 5. Manejar el formulario de ingreso inicial
+document.getElementById('form-pago').onsubmit = (e) => {
+    e.preventDefault();
+    
+    const id = parseInt(document.getElementById('puesto-num').value);
+    const placa = document.getElementById('placa-carro').value.toUpperCase();
+    const nombre = document.getElementById('nombre-usuario').value;
+    const contrato = document.getElementById('tipo-contrato').value;
+    
+    const index = parqueoData.findIndex(p => p.id === id);
+
+    if (index !== -1) {
+        if (parqueoData[index].ocupado) {
+            alert("⚠️ Error: Este puesto ya está ocupado.");
+            return;
+        }
+
+        parqueoData[index] = {
+            id: id,
+            ocupado: true,
+            placa: placa,
+            usuario: nombre,
+            tipo: contrato,
+            fecha: new Date().toLocaleDateString()
+        };
+
+        saveToLocal();
+        alert(`✅ Puesto ${id} asignado correctamente.`);
+        e.target.reset();
+        showSection('ingreso');
+    }
+};
+
 // 6. Actualizar Estadísticas
 function updateStats() {
     const ocupados = parqueoData.filter(p => p.ocupado).length;
-    const ingresos = parqueoData.reduce((total, p) => {
+    const ingresosEstimados = parqueoData.reduce((total, p) => {
         if (!p.ocupado) return total;
-        return total + (p.tipo === 'Mensual' ? 50 : 25); // Valores ejemplo
+        return total + (p.tipo === 'Mensual' ? 50 : 25);
     }, 0);
 
     document.getElementById('stat-ocupados').innerText = ocupados;
     document.getElementById('stat-libres').innerText = 100 - ocupados;
-    document.getElementById('stat-ingresos').innerText = ingresos;
+    document.getElementById('stat-ingresos').innerText = ingresosEstimados;
     
     document.getElementById('json-preview').innerText = JSON.stringify(parqueoData.filter(p => p.ocupado), null, 2);
 }
 
-// 7. Historial de Pagos
-
-let historialPagos = []; // Aquí guardaremos cada transacción
-
+// 7. Registro de Cobros Periódicos
 document.getElementById('form-registro-pago').onsubmit = (e) => {
     e.preventDefault();
     
@@ -165,7 +148,7 @@ document.getElementById('form-registro-pago').onsubmit = (e) => {
     const puesto = parqueoData.find(p => p.id === puestoId);
 
     if (!puesto || !puesto.ocupado) {
-        alert("❌ Error: Ese puesto está vacío. No se puede registrar pago.");
+        alert("❌ Error: No hay ningún vehículo registrado en ese puesto.");
         return;
     }
 
@@ -179,11 +162,9 @@ document.getElementById('form-registro-pago').onsubmit = (e) => {
     };
 
     historialPagos.push(nuevoPago);
+    saveToLocal();
     
-    // Guardamos ambos en LocalStorage por ahora
-    localStorage.setItem('historial_pagos', JSON.stringify(historialPagos));
-    
-    alert(`✅ Pago registrado para la placa ${puesto.placa}`);
+    alert(`✅ Pago de $${nuevoPago.monto} registrado para la placa ${puesto.placa}`);
     actualizarListaPagos();
     e.target.reset();
 };

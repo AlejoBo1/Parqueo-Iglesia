@@ -244,3 +244,41 @@ button[type="submit"] {
     padding-bottom: 5px;
     color: var(--secondary);
 }
+
+/* Evita que los números de los puestos se seleccionen al hacer clic rápido */
+.puesto {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Mejora la navegación sticky con un sombreado sutil */
+nav {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Para que los botones del nav resalten cual está activo (opcional) */
+nav button:active {
+    transform: scale(0.95);
+}
+
+/* Ajuste para pantallas pequeñas (Celulares) */
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+        margin: 10px auto;
+    }
+    
+    header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .grid-parqueo {
+        gap: 8px;
+    }
+}
+
+/* Hacer que el JSON se vea un poco más pequeño para que no ocupe tanto espacio */
+#json-preview {
+    font-size: 0.75rem;
+    max-height: 300px;
+}
