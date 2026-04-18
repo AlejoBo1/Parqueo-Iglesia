@@ -175,3 +175,72 @@ button[type="submit"] {
     from { opacity: 0; transform: translateY(10px); } 
     to { opacity: 1; transform: translateY(0); } 
 }
+
+/* --- Nuevos estilos para la Gestión de Pagos --- */
+
+/* Contenedor de la lista de historial */
+#lista-historial-pagos {
+    margin-top: 20px;
+    padding: 0;
+    max-height: 400px; /* Para que no crezca infinitamente hacia abajo */
+    overflow-y: auto; /* Scroll si hay muchos pagos */
+    border: 1px solid #e2e8f0;
+    background: #fff;
+}
+
+/* Cada fila de pago en la lista */
+#lista-historial-pagos li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #edf2f7;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+#lista-historial-pagos li:hover {
+    background-color: #f7fafc;
+}
+
+/* Estilo para los montos en la lista */
+.monto-badge {
+    background-color: #def7ec;
+    color: #03543f;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+/* Estilo para las fechas en la lista */
+.fecha-pago {
+    color: #718096;
+    font-size: 0.8rem;
+}
+
+/* Mejora para el formulario de cobro para que no sea tan ancho */
+#registro-pagos form {
+    max-width: 600px;
+    margin: 0 auto 30px auto;
+}
+
+/* Un pequeño efecto de "glow" para el botón de registrar pago */
+#form-registro-pago button {
+    background-color: var(--success);
+    box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);
+}
+
+#form-registro-pago button:hover {
+    background-color: #219150;
+    transform: translateY(-1px);
+}
+
+/* Estilo para los títulos de sección dentro de las pestañas */
+.section h3 {
+    margin-top: 30px;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+    padding-bottom: 5px;
+    color: var(--secondary);
+}

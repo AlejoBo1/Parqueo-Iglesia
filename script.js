@@ -154,5 +154,57 @@ function updateStats() {
     document.getElementById('json-preview').innerText = JSON.stringify(parqueoData.filter(p => p.ocupado), null, 2);
 }
 
+// 7. Historial de Pagos
+
+let historialPagos = []; // Aquí guardaremos cada transacción
+
+document.getElementById('form-registro-pago').onsubmit = (e) => {
+    e.preventDefault();
+    
+    const puestoId = parseInt(document.getElementById('pago-puesto-num').value);
+    const puesto = parqueoData.find(p => p.id === puestoId);
+
+    if (!puesto || !puesto.ocupado) {
+        alert("❌ Error: Ese puesto está vacío. No se puede registrar pago.");
+        return;
+    }
+
+    const nuevoPago = {
+        fechaOperacion: new Date().toLocaleString(),
+        puestoId: puestoId,
+        placa: puesto.placa,
+        dueño: puesto.usuario,
+        periodo: document.getElementById('periodo-pago').value,
+        monto: document.getElementById('monto-pago').value
+    };
+
+    historialPagos.push(nuevoPago);
+    
+    // Guardamos ambos en LocalStorage por ahora
+    localStorage.setItem('historial_pagos', JSON.stringify(historialPagos));
+    
+    alert(`✅ Pago registrado para la placa ${puesto.placa}`);
+    actualizarListaPagos();
+    e.target.reset();
+};
+
+function actualizarListaPagos() {
+    const lista = document.getElementById('lista-historial-pagos');
+    if(!lista) return;
+
+    lista.innerHTML = historialPagos.map(p => `
+        <li>
+            <div>
+                <span class="fecha-pago">${p.fechaOperacion}</span><br>
+                <strong>Puesto ${p.puestoId}</strong> — ${p.placa} (${p.dueño})
+            </div>
+            <div>
+                <small style="color: #666; margin-right: 10px;">${p.periodo}</small>
+                <span class="monto-badge">$${p.monto}</span>
+            </div>
+        </li>
+    `).reverse().join('');
+}
+
 // Iniciar aplicación
 loadData();
