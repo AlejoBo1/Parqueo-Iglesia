@@ -12,7 +12,7 @@ async function loadData() {
     // Cargar historial si existe
     if (localHistorial) {
         historialPagos = JSON.parse(localHistorial);
-        actualizarListaPagos();
+        actualizarListaPagos(); // ¡Esta era la función que faltaba abajo!
     }
 
     // Cargar puestos
@@ -46,10 +46,11 @@ async function loadData() {
     renderGrid();
 }
 
-// 2. Guardar en LocalStorage
+// 2. Guardar en LocalStorage (Versión única y correcta)
 function saveToLocal() {
     localStorage.setItem('parqueo_db', JSON.stringify(parqueoData));
     localStorage.setItem('historial_pagos', JSON.stringify(historialPagos));
+    localStorage.setItem('historial_movimientos', JSON.stringify(historialMovimientos));
 }
 
 // 3. Cambiar de sección
@@ -113,13 +114,6 @@ function renderGrid() {
         };
         container.appendChild(div);
     });
-}
-
-// 4.2 Guardar en LocalStorage (Ahora sí funcionará porque ve todas las variables)
-function saveToLocal() {
-    localStorage.setItem('parqueo_db', JSON.stringify(parqueoData));
-    localStorage.setItem('historial_pagos', JSON.stringify(historialPagos));
-    localStorage.setItem('historial_movimientos', JSON.stringify(historialMovimientos));
 }
 
 // 5. Manejar el formulario de ingreso inicial
@@ -194,12 +188,9 @@ document.getElementById('form-registro-pago').onsubmit = (e) => {
         return;
     }
 
-    // 2. Extraer Mes y Año para la validación de duplicados
-    // Esto evita que paguen "Abril" dos veces, pero permite pagar "Mayo" después.
     const fechaDt = new Date(fechaSeleccionada);
     const mesAno = `${fechaDt.getMonth() + 1}-${fechaDt.getFullYear()}`;
 
-    // 3. VALIDACIÓN MAESTRA: ¿Ya existe este pago?
     const yaExistePago = historialPagos.some(p => 
         p.puestoId === puestoId && 
         p.periodo === periodo && 
@@ -208,14 +199,13 @@ document.getElementById('form-registro-pago').onsubmit = (e) => {
 
     if (yaExistePago) {
         alert(`⚠️ El puesto ${puestoId} ya tiene un registro de "${periodo}" para este mes (${mesAno}). No se puede duplicar.`);
-        return; // Detiene el proceso
+        return; 
     }
 
-    // 4. Si pasa la validación, creamos el registro
     const nuevoPago = {
-        fechaOperacion: new Date().toLocaleString(), // Fecha real de cuando lo anotaste
-        fechaReferencia: fechaSeleccionada,          // Fecha que tú elegiste en el calendario
-        mesAno: mesAno,                              // Llave de control para no duplicar
+        fechaOperacion: new Date().toLocaleString(),
+        fechaReferencia: fechaSeleccionada,          
+        mesAno: mesAno,                              
         puestoId: puestoId,
         placa: puesto.placa,
         dueño: puesto.usuario,
@@ -234,26 +224,41 @@ document.getElementById('form-registro-pago').onsubmit = (e) => {
 
 // --- FUNCIONES DE APOYO ---
 
+// ¡ESTA ES LA FUNCIÓN QUE SE HABÍA BORRADO!
+function actualizarListaPagos() {
+    const lista = document.getElementById('lista-historial-pagos');
+    if(!lista) return;
+
+    lista.innerHTML = historialPagos.map(p => `
+        <li>
+            <div>
+                <span class="fecha-pago">${p.fechaOperacion}</span><br>
+                <strong>Puesto ${p.puestoId}</strong> — ${p.placa} (${p.dueño})
+            </div>
+            <div>
+                <small style="color: #666; margin-right: 10px;">${p.periodo}</small>
+                <span class="monto-badge">$${p.monto}</span>
+            </div>
+        </li>
+    `).reverse().join('');
+}
+
 function actualizarTablaMovimientos() {
-    // Por ahora solo loguea, luego aquí pondremos el código para llenar la tabla del HTML
+    // Por ahora solo loguea
     console.log("Actualizando tabla de movimientos...");
 }
 
 // --- INICIO DE LA APLICACIÓN ---
 
 async function iniciarApp() {
-    // 1. Cargamos los datos (esto llama a renderGrid internamente)
     await loadData();
 
-    // 2. Seteamos la fecha de hoy en el formulario de pagos
     const inputFecha = document.getElementById('fecha-pago');
     if(inputFecha) {
         inputFecha.value = new Date().toISOString().split('T')[0];
     }
     
-    // 3. Dibujamos la tabla de movimientos por primera vez
     actualizarTablaMovimientos();
-    
     console.log("🚀 Aplicación iniciada correctamente");
 }
 
