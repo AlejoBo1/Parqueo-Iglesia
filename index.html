@@ -84,6 +84,22 @@
         </div>
         <h3>Vista Previa de Datos Activos:</h3>
         <pre id="json-preview"></pre>
+
+        <h3>📜 Historial de Movimientos (Entradas/Salidas)</h3>
+        <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead style="background: var(--primary); color: white;">
+                    <tr>
+                        <th style="padding: 10px;">Fecha</th>
+                        <th style="padding: 10px;">Evento</th>
+                        <th style="padding: 10px;">Placa</th>
+                        <th style="padding: 10px;">Puesto</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-movimientos-body">
+                    </tbody>
+            </table>
+        </div>
     </div>
 </div> <script src="script.js"></script>
 </body>

@@ -1,6 +1,9 @@
 let parqueoData = [];
 let historialPagos = [];
 
+// Definimos el historial de movimientos de forma global una sola vez
+let historialMovimientos = JSON.parse(localStorage.getItem('historial_movimientos')) || [];
+
 // 1. Cargar Datos iniciales (Puestos e Historial)
 async function loadData() {
     const localData = localStorage.getItem('parqueo_db');
@@ -59,7 +62,7 @@ function showSection(id) {
     if (id === 'ingreso') renderGrid();
 }
 
-// 4. Dibujar el mapa de puestos (Versión única y mejorada)
+// 4. Dibujar el mapa de puestos
 function renderGrid() {
     const container = document.getElementById('grid-container');
     if(!container) return;
@@ -69,34 +72,54 @@ function renderGrid() {
         const div = document.createElement('div');
         div.className = `puesto ${p.ocupado ? 'ocupado' : 'disponible'}`;
         div.innerText = p.id;
-        
         div.title = p.ocupado ? `PLACA: ${p.placa} | Dueño: ${p.usuario}` : 'Puesto Libre';
         
-       if(p.ocupado) {
-            // 1. Pedir la contraseña antes de cualquier cosa
-            const pass = prompt(`Para liberar el puesto ${p.id}, ingresa la contraseña de administrador:`);
-            
-            if (pass === "1234") { // <--- Aquí pones la contraseña que tú quieras
-                const info = `Puesto ${p.id}\nVehículo: ${p.placa}\n¿Confirmar salida?`;
+        div.onclick = () => {
+            if(p.ocupado) {
+                const pass = prompt(`Para liberar el puesto ${p.id}, ingresa la contraseña:`);
                 
-                if(confirm(info)) {
-                    // AQUÍ ES DONDE ANTES BORRÁBAMOS TODO. 
-                    // Ahora, en el futuro, aquí mandaremos el evento "SALIDA" a Google Sheets
-                    
-                    p.ocupado = false;
-                    p.placa = "";
-                    p.usuario = "";
-                    p.tipo = "";
-                    saveToLocal();
-                    renderGrid();
-                    alert("✅ Puesto liberado. El registro se ha guardado en el historial.");
+                if (pass === "1234") { 
+                    if(confirm(`¿Confirmar salida del vehículo ${p.placa}?`)) {
+                        
+                        // Registro de Auditoría (SALIDA)
+                        historialMovimientos.push({
+                            fecha: new Date().toLocaleString(),
+                            evento: "SALIDA",
+                            puesto: p.id,
+                            placa: p.placa,
+                            usuario: p.usuario
+                        });
+                        
+                        p.ocupado = false;
+                        p.placa = "";
+                        p.usuario = "";
+                        p.tipo = "";
+                        
+                        saveToLocal();
+                        renderGrid();
+                        // Importante: Si tienes la tabla en el HTML, actualízala aquí
+                        if (typeof actualizarTablaMovimientos === "function") {
+                            actualizarTablaMovimientos(); 
+                        }
+                        alert("✅ Salida registrada exitosamente.");
+                    }
+                } else if (pass !== null) {
+                    alert("❌ Contraseña incorrecta.");
                 }
-            } else if (pass !== null) {
-                alert("❌ Contraseña incorrecta. No tienes permiso para liberar puestos.");
+            } else {
+                showSection('cobros');
+                document.getElementById('puesto-num').value = p.id;
             }
-        }
+        };
         container.appendChild(div);
     });
+}
+
+// 4.2 Guardar en LocalStorage (Ahora sí funcionará porque ve todas las variables)
+function saveToLocal() {
+    localStorage.setItem('parqueo_db', JSON.stringify(parqueoData));
+    localStorage.setItem('historial_pagos', JSON.stringify(historialPagos));
+    localStorage.setItem('historial_movimientos', JSON.stringify(historialMovimientos));
 }
 
 // 5. Manejar el formulario de ingreso inicial
@@ -124,6 +147,14 @@ document.getElementById('form-pago').onsubmit = (e) => {
             tipo: contrato,
             fecha: new Date().toLocaleDateString()
         };
+
+        historialMovimientos.push({
+            fecha: new Date().toLocaleString(),
+            evento: "INGRESO",
+            puesto: id,
+            placa: placa,
+            usuario: nombre
+        });
 
         saveToLocal();
         alert(`✅ Puesto ${id} asignado correctamente.`);
