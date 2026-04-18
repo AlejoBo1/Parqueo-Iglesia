@@ -9,15 +9,17 @@
 <body>
 
 <header>
-    <h1>Sistema de Parqueo Fijo</h1>
+    <h1>Sistema de Parqueo Fijo Tabernaculo Internacional </h1>
 </header>
 
+<!-- Navegación para cambiar entre secciones -->
 <nav>
     <button onclick="showSection('ingreso')">Mapa de Ingreso</button>
     <button onclick="showSection('cobros')">Nuevo Registro</button>
     <button onclick="showSection('registro-pagos')">Control de Pagos</button> <button onclick="showSection('estadisticas')">Estadísticas</button>
 </nav>
 
+<!-- Contenedor principal para las secciones -->
 <div class="container">
     <div id="ingreso" class="section active">
         <h2>Mapa de Puestos (1-100)</h2>
@@ -50,13 +52,22 @@
         </form>
     </div>
 
+    <!-- Nueva sección para el control de pagos -->
     <div id="registro-pagos" class="section">
         <h2>💰 Control de Pagos Mensuales/Quincenales</h2>
         <form id="form-registro-pago">
+
             <div class="form-group">
                 <label>Número de Puesto:</label>
                 <input type="number" id="pago-puesto-num" min="1" max="100" required>
             </div>
+
+            <div class="form-group">
+                <label>Fecha del Pago:</label>
+                <input type="date" id="fecha-pago" required>
+            </div>
+
+            <!-- Agregado: Selección de periodo a pagar -->
             <div class="form-group">
                 <label>Periodo a Pagar:</label>
                 <select id="periodo-pago">
@@ -65,13 +76,17 @@
                     <option value="Mes Completo">Mes Completo</option>
                 </select>
             </div>
+
+            <!-- Agregado: Monto a pagar (puede ser fijo o calculado según el periodo) -->
             <div class="form-group">
-                <label>Monto Recibido ($):</label>
-                <input type="number" id="monto-pago" required placeholder="Ej: 25.00">
+                <label for="monto-pago">Monto Recibido ($):</label>
+                <input type="number" id="monto-pago" step="0.01" required placeholder="Ej: 25.00">
             </div>
-            <button type="submit" style="background-color: var(--success); color: white; border: none; padding: 10px; cursor: pointer; border-radius: 4px; width: 100%;">Registrar Pago</button>
+
+            <button type="submit" class="btn-success">Registrar Pago</button>
         </form>
-        
+
+        <!-- Historial de pagos -->
         <h3>Últimos Pagos Registrados</h3>
         <ul id="lista-historial-pagos"></ul>
     </div>

@@ -282,3 +282,42 @@ nav button:active {
     font-size: 0.75rem;
     max-height: 300px;
 }
+
+/* Asegura que el input de fecha use la misma fuente y altura */
+input[type="date"] {
+    font-family: inherit;
+    color: var(--primary);
+    cursor: pointer;
+}
+
+/* Para que el botón del calendario no se vea amontonado */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(0.5); /* Le da un tono grisáceo elegante al ícono */
+}
+
+/* Clase para botones de éxito (como Registrar Pago) */
+.btn-success {
+    background-color: var(--success);
+    color: white;
+    border: none;
+    padding: 14px;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.btn-success:hover {
+    background-color: #219150;
+    transform: translateY(-2px);
+}
+
+#registro-pagos h3 {
+    margin-top: 40px;
+    color: var(--secondary);
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 5px;
+}

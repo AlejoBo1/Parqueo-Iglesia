@@ -183,47 +183,57 @@ document.getElementById('form-registro-pago').onsubmit = (e) => {
     e.preventDefault();
     
     const puestoId = parseInt(document.getElementById('pago-puesto-num').value);
-    const puesto = parqueoData.find(p => p.id === puestoId);
+    const fechaSeleccionada = document.getElementById('fecha-pago').value; // YYYY-MM-DD
+    const periodo = document.getElementById('periodo-pago').value;
+    const monto = document.getElementById('monto-pago').value;
 
+    // 1. Validar que el puesto exista y esté ocupado
+    const puesto = parqueoData.find(p => p.id === puestoId);
     if (!puesto || !puesto.ocupado) {
-        alert("❌ Error: No hay ningún vehículo registrado en ese puesto.");
+        alert("❌ Error: El puesto está vacío o no existe.");
         return;
     }
 
+    // 2. Extraer Mes y Año para la validación de duplicados
+    // Esto evita que paguen "Abril" dos veces, pero permite pagar "Mayo" después.
+    const fechaDt = new Date(fechaSeleccionada);
+    const mesAno = `${fechaDt.getMonth() + 1}-${fechaDt.getFullYear()}`;
+
+    // 3. VALIDACIÓN MAESTRA: ¿Ya existe este pago?
+    const yaExistePago = historialPagos.some(p => 
+        p.puestoId === puestoId && 
+        p.periodo === periodo && 
+        p.mesAno === mesAno
+    );
+
+    if (yaExistePago) {
+        alert(`⚠️ El puesto ${puestoId} ya tiene un registro de "${periodo}" para este mes (${mesAno}). No se puede duplicar.`);
+        return; // Detiene el proceso
+    }
+
+    // 4. Si pasa la validación, creamos el registro
     const nuevoPago = {
-        fechaOperacion: new Date().toLocaleString(),
+        fechaOperacion: new Date().toLocaleString(), // Fecha real de cuando lo anotaste
+        fechaReferencia: fechaSeleccionada,          // Fecha que tú elegiste en el calendario
+        mesAno: mesAno,                              // Llave de control para no duplicar
         puestoId: puestoId,
         placa: puesto.placa,
         dueño: puesto.usuario,
-        periodo: document.getElementById('periodo-pago').value,
-        monto: document.getElementById('monto-pago').value
+        periodo: periodo,
+        monto: monto
     };
 
     historialPagos.push(nuevoPago);
     saveToLocal();
     
-    alert(`✅ Pago de $${nuevoPago.monto} registrado para la placa ${puesto.placa}`);
+    alert(`✅ Pago registrado exitosamente para la placa ${puesto.placa}`);
     actualizarListaPagos();
     e.target.reset();
 };
 
-function actualizarListaPagos() {
-    const lista = document.getElementById('lista-historial-pagos');
-    if(!lista) return;
-
-    lista.innerHTML = historialPagos.map(p => `
-        <li>
-            <div>
-                <span class="fecha-pago">${p.fechaOperacion}</span><br>
-                <strong>Puesto ${p.puestoId}</strong> — ${p.placa} (${p.dueño})
-            </div>
-            <div>
-                <small style="color: #666; margin-right: 10px;">${p.periodo}</small>
-                <span class="monto-badge">$${p.monto}</span>
-            </div>
-        </li>
-    `).reverse().join('');
-}
-
 // Iniciar aplicación
+const inputFecha = document.getElementById('fecha-pago');
+if(inputFecha) {
+    inputFecha.value = new Date().toISOString().split('T')[0];
+}
 loadData();
