@@ -1,34 +1,23 @@
 let parqueoData = [];
 let historialPagos = [];
-
-// Definimos el historial de movimientos de forma global una sola vez
 let historialMovimientos = JSON.parse(localStorage.getItem('historial_movimientos')) || [];
 
-// 1. Cargar Datos iniciales (Puestos e Historial)
+// 1. Cargar Datos iniciales
 async function loadData() {
     const localData = localStorage.getItem('parqueo_db');
     const localHistorial = localStorage.getItem('historial_pagos');
     
-    // Cargar historial si existe
     if (localHistorial) {
         historialPagos = JSON.parse(localHistorial);
-        actualizarListaPagos(); // ¡Esta era la función que faltaba abajo!
+        actualizarListaPagos();
     }
 
-    // Cargar puestos
     if (localData) {
         parqueoData = JSON.parse(localData);
     } else {
-        try {
-            const response = await fetch('data.json');
-            parqueoData = await response.json();
-        } catch (e) {
-            console.warn("No se pudo cargar data.json, generando datos iniciales...");
-            parqueoData = [];
-        }
+        parqueoData = [];
     }
 
-    // Asegurar que siempre haya 100 puestos con todas sus propiedades
     if (parqueoData.length < 100) {
         for (let i = parqueoData.length + 1; i <= 100; i++) {
             parqueoData.push({ 
@@ -37,7 +26,7 @@ async function loadData() {
                 placa: "", 
                 usuario: "", 
                 tipo: "", 
-                fecha: "" ,
+                fecha: "" 
             });
         }
     }
@@ -46,7 +35,7 @@ async function loadData() {
     renderGrid();
 }
 
-// 2. Guardar en LocalStorage (Versión única y correcta)
+// 2. Guardar en LocalStorage
 function saveToLocal() {
     localStorage.setItem('parqueo_db', JSON.stringify(parqueoData));
     localStorage.setItem('historial_pagos', JSON.stringify(historialPagos));
@@ -73,46 +62,32 @@ function renderGrid() {
         const div = document.createElement('div');
         div.className = `puesto ${p.ocupado ? 'ocupado' : 'disponible'}`;
         div.innerText = p.id;
-        div.title = p.ocupado ? `PLACA: ${p.placa} | Dueño: ${p.usuario}` : 'Puesto Libre';
         
         div.onclick = () => {
             if(p.ocupado) {
                 const pass = prompt(`Para liberar el puesto ${p.id}, ingresa la contraseña:`);
-                
                 if (pass === "1234") { 
                     if(confirm(`¿Confirmar salida del vehículo ${p.placa}?`)) {
                         
-                        // Registro de Auditoría (SALIDA)
-                        historialMovimientos.push({
+                        const registroSalida = {
                             fecha: new Date().toLocaleString(),
                             evento: "SALIDA",
                             puesto: p.id,
                             placa: p.placa,
                             usuario: p.usuario
-                        });
+                        };
+
+                        historialMovimientos.push(registroSalida);
+                        enviarAGoogle(registroSalida);
                         
                         p.ocupado = false;
                         p.placa = "";
                         p.usuario = "";
                         p.tipo = "";
-
-                        const registroSalida = {
-                        fecha: new Date().toLocaleString(),
-                        evento: "SALIDA",
-                        puesto: p.id,
-                        placa: p.placa,
-                        usuario: p.usuario
-                        };
-
-                        historialMovimientos.push(registroSalida);
-                        enviarAGoogle(registroSalida); // <--- ESTO ES LO QUE AGREGASTE
                                             
                         saveToLocal();
                         renderGrid();
-                        // Importante: Si tienes la tabla en el HTML, actualízala aquí
-                        if (typeof actualizarTablaMovimientos === "function") {
-                            actualizarTablaMovimientos(); 
-                        }
+                        actualizarTablaMovimientos();
                         alert("✅ Salida registrada exitosamente.");
                     }
                 } else if (pass !== null) {
@@ -138,12 +113,7 @@ document.getElementById('form-pago').onsubmit = (e) => {
     
     const index = parqueoData.findIndex(p => p.id === id);
 
-    if (index !== -1) {
-        if (parqueoData[index].ocupado) {
-            alert("⚠️ Error: Este puesto ya está ocupado.");
-            return;
-        }
-
+    if (index !== -1 && !parqueoData[index].ocupado) {
         parqueoData[index] = {
             id: id,
             ocupado: true,
@@ -152,14 +122,6 @@ document.getElementById('form-pago').onsubmit = (e) => {
             tipo: contrato,
             fecha: new Date().toLocaleDateString()
         };
-
-        historialMovimientos.push({
-            fecha: new Date().toLocaleString(),
-            evento: "INGRESO",
-            puesto: id,
-            placa: placa,
-            usuario: nombre
-        });
 
         const registroIngreso = {
             fecha: new Date().toLocaleString(),
@@ -176,6 +138,8 @@ document.getElementById('form-pago').onsubmit = (e) => {
         alert(`✅ Puesto ${id} asignado correctamente.`);
         e.target.reset();
         showSection('ingreso');
+    } else {
+        alert("⚠️ El puesto está ocupado o no existe.");
     }
 };
 
@@ -190,8 +154,6 @@ function updateStats() {
     document.getElementById('stat-ocupados').innerText = ocupados;
     document.getElementById('stat-libres').innerText = 100 - ocupados;
     document.getElementById('stat-ingresos').innerText = ingresosEstimados;
-    
-    document.getElementById('json-preview').innerText = JSON.stringify(parqueoData.filter(p => p.ocupado), null, 2);
 }
 
 // 7. Registro de Cobros Periódicos
@@ -199,28 +161,21 @@ document.getElementById('form-registro-pago').onsubmit = (e) => {
     e.preventDefault();
     
     const puestoId = parseInt(document.getElementById('pago-puesto-num').value);
-    const fechaSeleccionada = document.getElementById('fecha-pago').value; // YYYY-MM-DD
+    const fechaSeleccionada = document.getElementById('fecha-pago').value;
     const periodo = document.getElementById('periodo-pago').value;
     const monto = document.getElementById('monto-pago').value;
 
-    // 1. Validar que el puesto exista y esté ocupado
     const puesto = parqueoData.find(p => p.id === puestoId);
     if (!puesto || !puesto.ocupado) {
-        alert("❌ Error: El puesto está vacío o no existe.");
+        alert("❌ Error: El puesto está vacío.");
         return;
     }
 
     const fechaDt = new Date(fechaSeleccionada);
     const mesAno = `${fechaDt.getMonth() + 1}-${fechaDt.getFullYear()}`;
 
-    const yaExistePago = historialPagos.some(p => 
-        p.puestoId === puestoId && 
-        p.periodo === periodo && 
-        p.mesAno === mesAno
-    );
-
-    if (yaExistePago) {
-        alert(`⚠️ El puesto ${puestoId} ya tiene un registro de "${periodo}" para este mes (${mesAno}). No se puede duplicar.`);
+    if (historialPagos.some(p => p.puestoId === puestoId && p.periodo === periodo && p.mesAno === mesAno)) {
+        alert(`⚠️ Ya existe este pago para ${mesAno}.`);
         return; 
     }
 
@@ -235,83 +190,42 @@ document.getElementById('form-registro-pago').onsubmit = (e) => {
         monto: monto
     };
 
-    const nuevoPago = {
-    fechaOperacion: new Date().toLocaleString(),
-    fechaReferencia: fechaSeleccionada,          
-    mesAno: mesAno,                              
-    puestoId: puestoId,
-    placa: puesto.placa,
-    dueño: puesto.usuario,
-    periodo: periodo,
-    monto: monto
-    };
-
     historialPagos.push(nuevoPago);
-    enviarAGoogle(nuevoPago); // <--- ESTO ES LO QUE AGREGASTE
+    enviarAGoogle(nuevoPago);
     saveToLocal();
-    
-    alert(`✅ Pago registrado exitosamente para la placa ${puesto.placa}`);
     actualizarListaPagos();
+    alert(`✅ Pago registrado.`);
     e.target.reset();
 };
 
-
 // --- FUNCIONES DE APOYO ---
-
-// ¡ESTA ES LA FUNCIÓN QUE SE HABÍA BORRADO!
 function actualizarListaPagos() {
     const lista = document.getElementById('lista-historial-pagos');
     if(!lista) return;
-
-    lista.innerHTML = historialPagos.map(p => `
-        <li>
-            <div>
-                <span class="fecha-pago">${p.fechaOperacion}</span><br>
-                <strong>Puesto ${p.puestoId}</strong> — ${p.placa} (${p.dueño})
-            </div>
-            <div>
-                <small style="color: #666; margin-right: 10px;">${p.periodo}</small>
-                <span class="monto-badge">$${p.monto}</span>
-            </div>
-        </li>
-    `).reverse().join('');
+    lista.innerHTML = historialPagos.map(p => `<li>Puesto ${p.puestoId} - $${p.monto} (${p.periodo})</li>`).reverse().join('');
 }
 
 function actualizarTablaMovimientos() {
-    // Por ahora solo loguea
-    console.log("Actualizando tabla de movimientos...");
+    console.log("Tabla actualizada.");
 }
 
-const URL_GOOGLE_SCRIPT = "PEGA_AQUÍ_TU_URL_DE_EXEC";
+// ⚠️ REEMPLAZA ESTA URL CON TU URL DE GOOGLE
+const URL_GOOGLE_SCRIPT = "TU_URL_AQUI"; 
 
 async function enviarAGoogle(datos) {
     try {
         await fetch(URL_GOOGLE_SCRIPT, {
             method: 'POST',
-            mode: 'no-cors', // Importante para Google Scripts
-            cache: 'no-cache',
+            mode: 'no-cors',
             body: JSON.stringify(datos)
         });
-        console.log("☁️ Datos sincronizados con Google Sheets");
-    } catch (error) {
-        console.error("❌ Error al sincronizar con la nube:", error);
-    }
+    } catch (e) { console.error(e); }
 }
-
-// --- INICIO DE LA APLICACIÓN ---
 
 async function iniciarApp() {
     await loadData();
-
     const inputFecha = document.getElementById('fecha-pago');
-    if(inputFecha) {
-        inputFecha.value = new Date().toISOString().split('T')[0];
-    }
-    
-    actualizarTablaMovimientos();
-    console.log("🚀 Aplicación iniciada correctamente");
+    if(inputFecha) inputFecha.value = new Date().toISOString().split('T')[0];
 }
 
-// Ejecutamos el inicio
 iniciarApp();
-
