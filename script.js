@@ -217,10 +217,10 @@ function actualizarTablaMovimientos() {
 }
 
 // ⚠️ REEMPLAZA ESTO CON TU URL REAL DE GOOGLE APPS SCRIPT
-const URL_GOOGLE_SCRIPT = "TU_URL_DE_APPS_SCRIPT_AQUI"; 
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbx-knKGVIje3zAypWqX0chJdRUZZ1lCOWmX8qSysMkumfCNK9w2w_rfg4ZmhxYj5d3b/exec"; 
 
 async function enviarAGoogle(datos) {
-    if (URL_GOOGLE_SCRIPT === "TU_URL_DE_APPS_SCRIPT_AQUI") return;
+    if (URL_GOOGLE_SCRIPT === "https://script.google.com/macros/s/AKfycbx-knKGVIje3zAypWqX0chJdRUZZ1lCOWmX8qSysMkumfCNK9w2w_rfg4ZmhxYj5d3b/exec") return;
     try {
         await fetch(URL_GOOGLE_SCRIPT, {
             method: 'POST',
