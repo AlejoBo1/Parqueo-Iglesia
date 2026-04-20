@@ -220,16 +220,25 @@ function actualizarTablaMovimientos() {
 const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbx-knKGVIje3zAypWqX0chJdRUZZ1lCOWmX8qSysMkumfCNK9w2w_rfg4ZmhxYj5d3b/exec"; 
 
 async function enviarAGoogle(datos) {
-    if (URL_GOOGLE_SCRIPT === "https://script.google.com/macros/s/AKfycbx-knKGVIje3zAypWqX0chJdRUZZ1lCOWmX8qSysMkumfCNK9w2w_rfg4ZmhxYj5d3b/exec") return;
+    // Verificamos que la URL no esté vacía
+    if (!URL_GOOGLE_SCRIPT || URL_GOOGLE_SCRIPT.includes("TU_URL_AQUI")) {
+        console.warn("⚠️ No se ha configurado la URL de Google Sheets.");
+        return;
+    }
+
     try {
+        console.log("📤 Intentando enviar datos a la nube...", datos);
+        
         await fetch(URL_GOOGLE_SCRIPT, {
             method: 'POST',
-            mode: 'no-cors',
+            mode: 'no-cors', // Necesario para Google Apps Script
+            cache: 'no-cache',
             body: JSON.stringify(datos)
         });
-        console.log("☁️ Sincronizado con Google Sheets");
+
+        console.log("✅ Solicitud enviada a Google Sheets");
     } catch (e) {
-        console.error("Error de sincronización:", e);
+        console.error("❌ Error de red al intentar sincronizar:", e);
     }
 }
 
