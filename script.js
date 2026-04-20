@@ -37,7 +37,7 @@ async function loadData() {
                 placa: "", 
                 usuario: "", 
                 tipo: "", 
-                fecha: "" 
+                fecha: "" ,
             });
         }
     }
@@ -95,7 +95,18 @@ function renderGrid() {
                         p.placa = "";
                         p.usuario = "";
                         p.tipo = "";
-                        
+
+                        const registroSalida = {
+                        fecha: new Date().toLocaleString(),
+                        evento: "SALIDA",
+                        puesto: p.id,
+                        placa: p.placa,
+                        usuario: p.usuario
+                        };
+
+                        historialMovimientos.push(registroSalida);
+                        enviarAGoogle(registroSalida); // <--- ESTO ES LO QUE AGREGASTE
+                                            
                         saveToLocal();
                         renderGrid();
                         // Importante: Si tienes la tabla en el HTML, actualízala aquí
@@ -149,6 +160,17 @@ document.getElementById('form-pago').onsubmit = (e) => {
             placa: placa,
             usuario: nombre
         });
+
+        const registroIngreso = {
+            fecha: new Date().toLocaleString(),
+            evento: "INGRESO",
+            puesto: id,
+            placa: placa,
+            usuario: nombre
+        };
+
+        historialMovimientos.push(registroIngreso);
+        enviarAGoogle(registroIngreso);
 
         saveToLocal();
         alert(`✅ Puesto ${id} asignado correctamente.`);
@@ -213,7 +235,19 @@ document.getElementById('form-registro-pago').onsubmit = (e) => {
         monto: monto
     };
 
+    const nuevoPago = {
+    fechaOperacion: new Date().toLocaleString(),
+    fechaReferencia: fechaSeleccionada,          
+    mesAno: mesAno,                              
+    puestoId: puestoId,
+    placa: puesto.placa,
+    dueño: puesto.usuario,
+    periodo: periodo,
+    monto: monto
+    };
+
     historialPagos.push(nuevoPago);
+    enviarAGoogle(nuevoPago); // <--- ESTO ES LO QUE AGREGASTE
     saveToLocal();
     
     alert(`✅ Pago registrado exitosamente para la placa ${puesto.placa}`);
@@ -248,6 +282,22 @@ function actualizarTablaMovimientos() {
     console.log("Actualizando tabla de movimientos...");
 }
 
+const URL_GOOGLE_SCRIPT = "PEGA_AQUÍ_TU_URL_DE_EXEC";
+
+async function enviarAGoogle(datos) {
+    try {
+        await fetch(URL_GOOGLE_SCRIPT, {
+            method: 'POST',
+            mode: 'no-cors', // Importante para Google Scripts
+            cache: 'no-cache',
+            body: JSON.stringify(datos)
+        });
+        console.log("☁️ Datos sincronizados con Google Sheets");
+    } catch (error) {
+        console.error("❌ Error al sincronizar con la nube:", error);
+    }
+}
+
 // --- INICIO DE LA APLICACIÓN ---
 
 async function iniciarApp() {
@@ -264,3 +314,4 @@ async function iniciarApp() {
 
 // Ejecutamos el inicio
 iniciarApp();
+
