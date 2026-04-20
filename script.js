@@ -15,19 +15,21 @@ async function loadData() {
     if (localData) {
         parqueoData = JSON.parse(localData);
     } else {
-        parqueoData = [];
+        // Generar 100 puestos si no hay datos
+        parqueoData = Array.from({ length: 100 }, (_, i) => ({
+            id: i + 1,
+            ocupado: false,
+            placa: "",
+            usuario: "",
+            tipo: "",
+            fecha: ""
+        }));
     }
 
+    // Asegurar que siempre haya 100 puestos
     if (parqueoData.length < 100) {
         for (let i = parqueoData.length + 1; i <= 100; i++) {
-            parqueoData.push({ 
-                id: i, 
-                ocupado: false, 
-                placa: "", 
-                usuario: "", 
-                tipo: "", 
-                fecha: "" 
-            });
+            parqueoData.push({ id: i, ocupado: false, placa: "", usuario: "", tipo: "", fecha: "" });
         }
     }
     
@@ -202,30 +204,43 @@ document.getElementById('form-registro-pago').onsubmit = (e) => {
 function actualizarListaPagos() {
     const lista = document.getElementById('lista-historial-pagos');
     if(!lista) return;
-    lista.innerHTML = historialPagos.map(p => `<li>Puesto ${p.puestoId} - $${p.monto} (${p.periodo})</li>`).reverse().join('');
+    lista.innerHTML = historialPagos.map(p => `
+        <li>
+            <strong>Puesto ${p.puestoId}</strong> — $${p.monto} (${p.periodo})
+            <br><small>${p.fechaOperacion}</small>
+        </li>
+    `).reverse().join('');
 }
 
 function actualizarTablaMovimientos() {
-    console.log("Tabla actualizada.");
+    console.log("Tabla de movimientos actualizada localmente.");
 }
 
-// ⚠️ REEMPLAZA ESTA URL CON TU URL DE GOOGLE
-const URL_GOOGLE_SCRIPT = "TU_URL_AQUI"; 
+// ⚠️ REEMPLAZA ESTO CON TU URL REAL DE GOOGLE APPS SCRIPT
+const URL_GOOGLE_SCRIPT = "TU_URL_DE_APPS_SCRIPT_AQUI"; 
 
 async function enviarAGoogle(datos) {
+    if (URL_GOOGLE_SCRIPT === "TU_URL_DE_APPS_SCRIPT_AQUI") return;
     try {
         await fetch(URL_GOOGLE_SCRIPT, {
             method: 'POST',
             mode: 'no-cors',
             body: JSON.stringify(datos)
         });
-    } catch (e) { console.error(e); }
+        console.log("☁️ Sincronizado con Google Sheets");
+    } catch (e) {
+        console.error("Error de sincronización:", e);
+    }
 }
 
+// --- INICIO DE LA APLICACIÓN ---
 async function iniciarApp() {
     await loadData();
     const inputFecha = document.getElementById('fecha-pago');
-    if(inputFecha) inputFecha.value = new Date().toISOString().split('T')[0];
+    if(inputFecha) {
+        inputFecha.value = new Date().toISOString().split('T')[0];
+    }
+    console.log("🚀 Aplicación iniciada");
 }
 
 iniciarApp();
