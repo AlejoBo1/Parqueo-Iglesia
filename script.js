@@ -2,7 +2,7 @@ let parqueoData = [];
 let historialPagos = [];
 let historialMovimientos = JSON.parse(localStorage.getItem('historial_movimientos')) || [];
 
-// 1. Cargar Datos iniciales
+// 1. Cargar Datos
 async function loadData() {
     const localData = localStorage.getItem('parqueo_db');
     const localHistorial = localStorage.getItem('historial_pagos');
@@ -15,46 +15,30 @@ async function loadData() {
     if (localData) {
         parqueoData = JSON.parse(localData);
     } else {
-        // Generar 100 puestos si no hay datos
         parqueoData = Array.from({ length: 100 }, (_, i) => ({
-            id: i + 1,
-            ocupado: false,
-            placa: "",
-            usuario: "",
-            tipo: "",
-            fecha: ""
+            id: i + 1, ocupado: false, placa: "", usuario: "", tipo: "", fecha: ""
         }));
     }
-
-    // Asegurar que siempre haya 100 puestos
-    if (parqueoData.length < 100) {
-        for (let i = parqueoData.length + 1; i <= 100; i++) {
-            parqueoData.push({ id: i, ocupado: false, placa: "", usuario: "", tipo: "", fecha: "" });
-        }
-    }
-    
-    saveToLocal();
     renderGrid();
 }
 
-// 2. Guardar en LocalStorage
+// 2. Guardar Local
 function saveToLocal() {
     localStorage.setItem('parqueo_db', JSON.stringify(parqueoData));
     localStorage.setItem('historial_pagos', JSON.stringify(historialPagos));
     localStorage.setItem('historial_movimientos', JSON.stringify(historialMovimientos));
 }
 
-// 3. Cambiar de sección
+// 3. Navegación
 function showSection(id) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     const target = document.getElementById(id);
     if(target) target.classList.add('active');
-    
     if (id === 'estadisticas') updateStats();
     if (id === 'ingreso') renderGrid();
 }
 
-// 4. Dibujar el mapa de puestos
+// 4. Mapa de Puestos
 function renderGrid() {
     const container = document.getElementById('grid-container');
     if(!container) return;
@@ -67,10 +51,9 @@ function renderGrid() {
         
         div.onclick = () => {
             if(p.ocupado) {
-                const pass = prompt(`Para liberar el puesto ${p.id}, ingresa la contraseña:`);
+                const pass = prompt(`Contraseña para liberar puesto ${p.id}:`);
                 if (pass === "1234") { 
-                    if(confirm(`¿Confirmar salida del vehículo ${p.placa}?`)) {
-                        
+                    if(confirm(`¿Confirmar salida de ${p.placa}?`)) {
                         const registroSalida = {
                             fecha: new Date().toLocaleString(),
                             evento: "SALIDA",
@@ -78,22 +61,14 @@ function renderGrid() {
                             placa: p.placa,
                             usuario: p.usuario
                         };
-
                         historialMovimientos.push(registroSalida);
                         enviarAGoogle(registroSalida);
                         
                         p.ocupado = false;
-                        p.placa = "";
-                        p.usuario = "";
-                        p.tipo = "";
-                                            
+                        p.placa = ""; p.usuario = ""; p.tipo = "";
                         saveToLocal();
                         renderGrid();
-                        actualizarTablaMovimientos();
-                        alert("✅ Salida registrada exitosamente.");
                     }
-                } else if (pass !== null) {
-                    alert("❌ Contraseña incorrecta.");
                 }
             } else {
                 showSection('cobros');
@@ -104,152 +79,83 @@ function renderGrid() {
     });
 }
 
-// 5. Manejar el formulario de ingreso inicial
+// 5. Formulario Ingreso
 document.getElementById('form-pago').onsubmit = (e) => {
     e.preventDefault();
-    
     const id = parseInt(document.getElementById('puesto-num').value);
     const placa = document.getElementById('placa-carro').value.toUpperCase();
     const nombre = document.getElementById('nombre-usuario').value;
     const contrato = document.getElementById('tipo-contrato').value;
     
-    const index = parqueoData.findIndex(p => p.id === id);
+    const idx = parqueoData.findIndex(p => p.id === id);
+    if (idx !== -1 && !parqueoData[idx].ocupado) {
+        parqueoData[idx] = { id, ocupado: true, placa, usuario: nombre, tipo: contrato, fecha: new Date().toLocaleDateString() };
 
-    if (index !== -1 && !parqueoData[index].ocupado) {
-        parqueoData[index] = {
-            id: id,
-            ocupado: true,
-            placa: placa,
-            usuario: nombre,
-            tipo: contrato,
-            fecha: new Date().toLocaleDateString()
-        };
-
-        const registroIngreso = {
-            fecha: new Date().toLocaleString(),
-            evento: "INGRESO",
-            puesto: id,
-            placa: placa,
-            usuario: nombre
-        };
-
-        historialMovimientos.push(registroIngreso);
-        enviarAGoogle(registroIngreso);
+        const registro = { fecha: new Date().toLocaleString(), evento: "INGRESO", puesto: id, placa, usuario: nombre };
+        historialMovimientos.push(registro);
+        enviarAGoogle(registro);
 
         saveToLocal();
-        alert(`✅ Puesto ${id} asignado correctamente.`);
+        alert(`✅ Puesto ${id} asignado.`);
         e.target.reset();
         showSection('ingreso');
-    } else {
-        alert("⚠️ El puesto está ocupado o no existe.");
     }
 };
 
-// 6. Actualizar Estadísticas
-function updateStats() {
-    const ocupados = parqueoData.filter(p => p.ocupado).length;
-    const ingresosEstimados = parqueoData.reduce((total, p) => {
-        if (!p.ocupado) return total;
-        return total + (p.tipo === 'Mensual' ? 50 : 25);
-    }, 0);
-
-    document.getElementById('stat-ocupados').innerText = ocupados;
-    document.getElementById('stat-libres').innerText = 100 - ocupados;
-    document.getElementById('stat-ingresos').innerText = ingresosEstimados;
-}
-
-// 7. Registro de Cobros Periódicos
+// 7. Registro de Pagos
 document.getElementById('form-registro-pago').onsubmit = (e) => {
     e.preventDefault();
+    const pId = parseInt(document.getElementById('pago-puesto-num').value);
+    const p = parqueoData.find(x => x.id === pId);
     
-    const puestoId = parseInt(document.getElementById('pago-puesto-num').value);
-    const fechaSeleccionada = document.getElementById('fecha-pago').value;
-    const periodo = document.getElementById('periodo-pago').value;
-    const monto = document.getElementById('monto-pago').value;
+    if (!p || !p.ocupado) return alert("Puesto vacío");
 
-    const puesto = parqueoData.find(p => p.id === puestoId);
-    if (!puesto || !puesto.ocupado) {
-        alert("❌ Error: El puesto está vacío.");
-        return;
-    }
+    const fechaSel = document.getElementById('fecha-pago').value;
+    const dt = new Date(fechaSel);
+    const mesAno = `${dt.getMonth() + 1}-${dt.getFullYear()}`;
 
-    const fechaDt = new Date(fechaSeleccionada);
-    const mesAno = `${fechaDt.getMonth() + 1}-${fechaDt.getFullYear()}`;
-
-    if (historialPagos.some(p => p.puestoId === puestoId && p.periodo === periodo && p.mesAno === mesAno)) {
-        alert(`⚠️ Ya existe este pago para ${mesAno}.`);
-        return; 
-    }
-
-    const nuevoPago = {
+    const pago = {
         fechaOperacion: new Date().toLocaleString(),
-        fechaReferencia: fechaSeleccionada,          
-        mesAno: mesAno,                              
-        puestoId: puestoId,
-        placa: puesto.placa,
-        dueño: puesto.usuario,
-        periodo: periodo,
-        monto: monto
+        fechaReferencia: fechaSel,
+        mesAno,
+        puestoId: pId,
+        placa: p.placa,
+        dueño: p.usuario,
+        periodo: document.getElementById('periodo-pago').value,
+        monto: document.getElementById('monto-pago').value
     };
 
-    historialPagos.push(nuevoPago);
-    enviarAGoogle(nuevoPago);
+    historialPagos.push(pago);
+    enviarAGoogle(pago);
     saveToLocal();
     actualizarListaPagos();
-    alert(`✅ Pago registrado.`);
+    alert("✅ Pago registrado.");
     e.target.reset();
 };
 
-// --- FUNCIONES DE APOYO ---
-function actualizarListaPagos() {
-    const lista = document.getElementById('lista-historial-pagos');
-    if(!lista) return;
-    lista.innerHTML = historialPagos.map(p => `
-        <li>
-            <strong>Puesto ${p.puestoId}</strong> — $${p.monto} (${p.periodo})
-            <br><small>${p.fechaOperacion}</small>
-        </li>
-    `).reverse().join('');
-}
-
-function actualizarTablaMovimientos() {
-    console.log("Tabla de movimientos actualizada localmente.");
-}
-
-
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbx-knKGVIje3zAypWqX0chJdRUZZ1lCOWmX8qSysMkumfCNK9w2w_rfg4ZmhxYj5d3b/exec"; 
+// --- SINCRONIZACIÓN ---
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbx-knKGVije3zAypWqX0chJDRUZZ1lCOWmX8qSysMkumfCNK9w2w_rfg4ZmhxYj5d3b/exec";
 
 async function enviarAGoogle(datos) {
-    // Verificamos que la URL no esté vacía
-    if (!URL_GOOGLE_SCRIPT || URL_GOOGLE_SCRIPT.includes("https://script.google.com/macros/s/AKfycbx-knKGVIje3zAypWqX0chJdRUZZ1lCOWmX8qSysMkumfCNK9w2w_rfg4ZmhxYj5d3b/exec")) {
-        console.warn("⚠️ No se ha configurado la URL de Google Sheets.");
-        return;
-    }
-
     try {
-        console.log("📤 Intentando enviar datos a la nube...", datos);
-        
+        console.log("☁️ Enviando...", datos);
         await fetch(URL_GOOGLE_SCRIPT, {
             method: 'POST',
-            mode: 'no-cors', // Necesario para Google Apps Script
-            cache: 'no-cache',
+            mode: 'no-cors',
             body: JSON.stringify(datos)
         });
-
-        console.log("✅ Solicitud enviada a Google Sheets");
-    } catch (e) {
-        console.error("❌ Error de red al intentar sincronizar:", e);
-    }
+    } catch (err) { console.error("Error nube:", err); }
 }
 
-// --- INICIO DE LA APLICACIÓN ---
-async function iniciarApp() {
-    await loadData();
-    const inputFecha = document.getElementById('fecha-pago');
-    if(inputFecha) {
-        inputFecha.value = new Date().toISOString().split('T')[0];
-    }
-    console.log("🚀 Aplicación iniciada");
+function actualizarListaPagos() {
+    const el = document.getElementById('lista-historial-pagos');
+    if(el) el.innerHTML = historialPagos.map(p => `<li>Puesto ${p.puestoId}: $${p.monto}</li>`).reverse().join('');
 }
 
-iniciarApp();
+function updateStats() {
+    const oc = parqueoData.filter(p => p.ocupado).length;
+    document.getElementById('stat-ocupados').innerText = oc;
+    document.getElementById('stat-libres').innerText = 100 - oc;
+}
+
+loadData();
