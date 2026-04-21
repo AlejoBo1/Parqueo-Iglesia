@@ -216,12 +216,12 @@ function actualizarTablaMovimientos() {
     console.log("Tabla de movimientos actualizada localmente.");
 }
 
-// ⚠️ REEMPLAZA ESTO CON TU URL REAL DE GOOGLE APPS SCRIPT
+
 const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbx-knKGVIje3zAypWqX0chJdRUZZ1lCOWmX8qSysMkumfCNK9w2w_rfg4ZmhxYj5d3b/exec"; 
 
 async function enviarAGoogle(datos) {
     // Verificamos que la URL no esté vacía
-    if (!URL_GOOGLE_SCRIPT || URL_GOOGLE_SCRIPT.includes("TU_URL_AQUI")) {
+    if (!URL_GOOGLE_SCRIPT || URL_GOOGLE_SCRIPT.includes("https://script.google.com/macros/s/AKfycbx-knKGVIje3zAypWqX0chJdRUZZ1lCOWmX8qSysMkumfCNK9w2w_rfg4ZmhxYj5d3b/exec")) {
         console.warn("⚠️ No se ha configurado la URL de Google Sheets.");
         return;
     }
