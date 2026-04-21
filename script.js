@@ -134,7 +134,7 @@ document.getElementById('form-registro-pago').onsubmit = (e) => {
 };
 
 // --- SINCRONIZACIÓN ---
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbx-knKGVije3zAypWqX0chJDRUZZ1lCOWmX8qSysMkumfCNK9w2w_rfg4ZmhxYj5d3b/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/https://script.google.com/macros/s/AKfycbyU_ZimylxYNUpSKNuDBUmiEeZ4Nxdr5r0o9SQCGjpno1hBEfZsMNxsdCq3_3iZdzlL/exec";
 
 async function enviarAGoogle(datos) {
     try {
