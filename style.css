@@ -321,3 +321,27 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     border-bottom: 2px solid var(--accent);
     padding-bottom: 5px;
 }
+
+#user-info {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+#nombre-operador-display {
+    color: #a6e22e; /* Un verde neón suave para que resalte el nombre */
+    font-weight: bold;
+}
+
+#tabla-movimientos-body tr {
+    border-bottom: 1px solid #eee;
+}
+
+#tabla-movimientos-body td {
+    padding: 12px;
+    font-size: 0.85rem;
+}
+
+#tabla-movimientos-body tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
