@@ -1,35 +1,43 @@
 let parqueoData = [];
 let historialPagos = [];
-let historialMovimientos = JSON.parse(localStorage.getItem('historial_movimientos')) || [];
+let historialMovimientos = []; // Ya no cargamos de localStorage
+
+// Variables para el control de acceso
+let nombreOperador = "";
+let pinIngresado = "";
 
 // 1. Cargar Datos
 async function loadData() {
-    const localData = localStorage.getItem('parqueo_db');
-    const localHistorial = localStorage.getItem('historial_pagos');
+    console.log("☁️ Sincronizando con Google Sheets...");
     
-    if (localHistorial) {
-        historialPagos = JSON.parse(localHistorial);
-        actualizarListaPagos();
+    try {
+        const response = await fetch(URL_GOOGLE_SCRIPT, {
+            method: 'POST',
+            body: JSON.stringify({ accion: "CARGAR_ESTADO" })
+        });
+        
+        const res = await response.json();
+        
+        if (res.status === "success") {
+            // Mapeamos las filas de la hoja "Estado_Actual" a tu array parqueoData
+            parqueoData = res.datos.map(fila => ({
+                id: fila[0],         // Columna A (ID)
+                ocupado: fila[1] === "OCUPADO", // Columna B (Estado)
+                placa: fila[2] || "", // Columna C (Placa)
+                usuario: fila[3] || "" // Columna D (Dueño)
+            }));
+            
+            console.log("✅ Datos cargados correctamente");
+            renderGrid();
+        }
+    } catch (err) {
+        console.error("❌ Error de conexión:", err);
+        alert("No se pudo conectar con la base de datos en la nube.");
     }
-
-    if (localData) {
-        parqueoData = JSON.parse(localData);
-    } else {
-        parqueoData = Array.from({ length: 100 }, (_, i) => ({
-            id: i + 1, ocupado: false, placa: "", usuario: "", tipo: "", fecha: ""
-        }));
-    }
-    renderGrid();
 }
 
-// 2. Guardar Local
-function saveToLocal() {
-    localStorage.setItem('parqueo_db', JSON.stringify(parqueoData));
-    localStorage.setItem('historial_pagos', JSON.stringify(historialPagos));
-    localStorage.setItem('historial_movimientos', JSON.stringify(historialMovimientos));
-}
 
-// 3. Navegación
+// 2. Navegación
 function showSection(id) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     const target = document.getElementById(id);
@@ -38,7 +46,7 @@ function showSection(id) {
     if (id === 'ingreso') renderGrid();
 }
 
-// 4. Mapa de Puestos
+// 3. Mapa de Puestos
 function renderGrid() {
     const container = document.getElementById('grid-container');
     if(!container) return;
@@ -46,31 +54,39 @@ function renderGrid() {
     
     parqueoData.forEach(p => {
         const div = document.createElement('div');
+        // Usamos 'disponible' u 'ocupado' según tu CSS
         div.className = `puesto ${p.ocupado ? 'ocupado' : 'disponible'}`;
-        div.innerText = p.id;
+        div.innerText = p.id + (p.placa ? `\n${p.placa}` : "");
         
-        div.onclick = () => {
+        div.onclick = async () => {
             if(p.ocupado) {
-                const pass = prompt(`Contraseña para liberar puesto ${p.id}:`);
-                if (pass === "1234") { 
-                    if(confirm(`¿Confirmar salida de ${p.placa}?`)) {
-                        const registroSalida = {
-                            fecha: new Date().toLocaleString(),
-                            evento: "SALIDA",
-                            puesto: p.id,
-                            placa: p.placa,
-                            usuario: p.usuario
-                        };
-                        historialMovimientos.push(registroSalida);
-                        enviarAGoogle(registroSalida);
-                        
+                // Ahora validamos con el PIN que el operador ingresó al inicio
+                const confirmacion = confirm(`¿Confirmar salida del vehículo con placa ${p.placa}?`);
+                
+                if (confirmacion) {
+                    const registroSalida = {
+                        accion: "MOVIMIENTO", // Le decimos al API qué tipo de operación es
+                        fecha: new Date().toLocaleString(),
+                        evento: "SALIDA",
+                        puesto: p.id,
+                        placa: p.placa,
+                        operador: nombreOperador // Usamos el nombre capturado al inicio
+                    };
+
+                    // Enviamos a la nube y esperamos confirmación
+                    const exito = await enviarAGoogle(registroSalida);
+                    
+                    if(exito) {
                         p.ocupado = false;
-                        p.placa = ""; p.usuario = ""; p.tipo = "";
-                        saveToLocal();
+                        p.placa = ""; 
+                        p.usuario = "";
                         renderGrid();
+                        updateStats();
+                        alert("✅ Salida registrada en la nube.");
                     }
                 }
             } else {
+                // Si está libre, mandamos a la sección de cobros/registro
                 showSection('cobros');
                 document.getElementById('puesto-num').value = p.id;
             }
@@ -79,7 +95,7 @@ function renderGrid() {
     });
 }
 
-// 5. Formulario Ingreso
+// 4. Formulario Ingreso
 document.getElementById('form-pago').onsubmit = (e) => {
     e.preventDefault();
     const id = parseInt(document.getElementById('puesto-num').value);
@@ -102,7 +118,7 @@ document.getElementById('form-pago').onsubmit = (e) => {
     }
 };
 
-// 7. Registro de Pagos
+// 5. Registro de Pagos
 document.getElementById('form-registro-pago').onsubmit = (e) => {
     e.preventDefault();
     const pId = parseInt(document.getElementById('pago-puesto-num').value);
@@ -133,29 +149,83 @@ document.getElementById('form-registro-pago').onsubmit = (e) => {
     e.target.reset();
 };
 
-// --- SINCRONIZACIÓN ---
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxPw9dDOZkhXFVC3gPzv1lEJbN8_GGBs40nAOYKjFX3vE76uK-kY2tpsZcUK_YBUmD7_g/exec";
+// --- SINCRONIZACIÓN Y SEGURIDAD ---
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxvPCv_sUG37bxNOvy9c6NCzD8Fah61vqKpT1WGppbX_eyIAnKeRqNrGKhDq80fFCoacw/exec";
+
+// Variables globales para la sesión del operador
+let nombreOperador = "";
+let pinIngresado = "";
 
 async function enviarAGoogle(datos) {
     try {
-        console.log("☁️ Enviando...", datos);
-        await fetch(URL_GOOGLE_SCRIPT, {
+        console.log("☁️ Enviando a la nube...", datos);
+        // Agregamos el PIN y el Operador a cada envío para que Google los valide
+        const datosConSeguridad = {
+            ...datos,
+            pin: pinIngresado,
+            operador: nombreOperador
+        };
+
+        const response = await fetch(URL_GOOGLE_SCRIPT, {
             method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify(datos)
+            body: JSON.stringify(datosConSeguridad)
         });
-    } catch (err) { console.error("Error nube:", err); }
+        
+        const res = await response.json();
+        if (res.status === "error") {
+            alert("❌ Error de seguridad: " + res.message);
+            return false;
+        }
+        return true;
+    } catch (err) { 
+        console.error("Error nube:", err); 
+        return false;
+    }
 }
 
-function actualizarListaPagos() {
-    const el = document.getElementById('lista-historial-pagos');
-    if(el) el.innerHTML = historialPagos.map(p => `<li>Puesto ${p.puestoId}: $${p.monto}</li>`).reverse().join('');
+function actualizarInterfazDesdeNube(puestosNube) {
+    // 1. Actualizamos tu variable principal de datos (parqueoData)
+    // Asumiendo que puestosNube es un array de 100 filas
+    puestosNube.forEach((fila, index) => {
+        parqueoData[index] = {
+            puesto: fila[0],
+            ocupado: fila[1] === "OCUPADO",
+            placa: fila[2],
+            dueno: fila[3]
+        };
+    });
+
+    // 2. Refrescamos visualmente los cuadritos (la función que ya tenías)
+    renderPuestos(); // O el nombre de tu función que dibuja los cuadros
+    updateStats();
 }
 
-function updateStats() {
-    const oc = parqueoData.filter(p => p.ocupado).length;
-    document.getElementById('stat-ocupados').innerText = oc;
-    document.getElementById('stat-libres').innerText = 100 - oc;
-}
+// --- ESTE ES EL NUEVO BLOQUE QUE REEMPLAZA A loadData() ---
+window.onload = async () => {
+    // 1. Pedir identificación al entrar
+    nombreOperador = prompt("Ingrese su nombre (Operador):");
+    pinIngresado = prompt("Ingrese el PIN de seguridad:");
 
-loadData();
+    if (!nombreOperador || !pinIngresado) {
+        alert("Es necesario identificarse para usar el sistema.");
+        location.reload(); // Recarga si no pone datos
+        return;
+    }
+
+    console.log(`👤 Operador: ${nombreOperador} conectado.`);
+
+    // 2. Cargar estado inicial desde Google
+    try {
+        const response = await fetch(URL_GOOGLE_SCRIPT, {
+            method: 'POST',
+            body: JSON.stringify({ accion: "CARGAR_ESTADO" })
+        });
+        const res = await response.json();
+        
+        if (res.status === "success") {
+            actualizarInterfazDesdeNube(res.datos);
+        }
+    } catch (err) {
+        alert("No se pudo sincronizar con la nube. El sistema podría no estar actualizado.");
+    }
+};
