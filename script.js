@@ -55,9 +55,10 @@ async function loadData() {
                 id: fila[0], 
                 ocupado: fila[1] === "OCUPADO",
                 placa: fila[2] || "",
-                usuario: fila[3] || ""
+                propietario: fila[3] || "",
+                marca: fila[4] || "",
+                contrato: fila[5] || ""
             }));
-            
             renderGrid();
             updateStats();
         } else {
@@ -137,7 +138,9 @@ function renderGrid() {
                     if(exito) {
                         p.ocupado = false;
                         p.placa = ""; 
-                        p.usuario = "";
+                        p.propietario = "";
+                        p.marca = "";
+                        p.contrato = "";
                         renderGrid();
                         updateStats();
                         alert("✅ Salida registrada.");
@@ -163,7 +166,9 @@ document.getElementById('form-pago').onsubmit = async (e) => {
     e.preventDefault();
     const id = parseInt(document.getElementById('puesto-num').value);
     const placa = document.getElementById('placa-carro').value.toUpperCase();
+    const marca = document.getElementById('marca-carro').value;
     const nombre = document.getElementById('nombre-usuario').value;
+    const contrato = document.getElementById('tipo-contrato').value;
     
     const idx = parqueoData.findIndex(p => p.id === id);
     if (idx !== -1 && !parqueoData[idx].ocupado) {
@@ -174,13 +179,15 @@ document.getElementById('form-pago').onsubmit = async (e) => {
             evento: "INGRESO", 
             puesto: id, 
             placa: placa, 
-            usuario: nombre 
+            propietario: nombre,
+            marca: marca,
+            contrato: contrato
         };
 
         const exito = await enviarAGoogle(registroIngreso);
 
         if (exito) {
-            parqueoData[idx] = { id, ocupado: true, placa, usuario: nombre };
+            parqueoData[idx] = { id, ocupado: true, placa, propietario: nombre, marca, contrato };
             alert(`✅ Puesto ${id} asignado a ${placa}.`);
             e.target.reset();
             renderGrid();
