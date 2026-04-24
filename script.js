@@ -2,7 +2,7 @@
 // CONFIGURACIÓN PRINCIPAL
 // ==========================================
 // ⚠️ IMPORTANTE: Pega aquí la URL exacta de tu "Nueva implementación" de Google Apps Script
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbyH9yznN3ok0oTBon1P4wr7-dI-HLV6NfaI2vdLvbsbDA1xjpbcNK7Ehz_JqGoHq8tlhw/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwlBKuWO2GGWyhPPslqulcAgWVp8_e9IGksoNWHgrV1aUDG4dMKe4OAE7qPdvrRb2vPRA/exec";
 
 // Variables globales de datos
 let parqueoData = [];
