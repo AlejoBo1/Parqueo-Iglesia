@@ -1,5 +1,5 @@
 // Reemplaza TODO tu script.js con esto
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzLuRbxYBRbljg0I5MSCKMUTXCCXBFaV0GVRuXHemMgAl6qERt_QSpDaejX62HGhrCMqA/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwxAMljQ3DjJbZoKTCdUF6UL9GZELfVdN0XErKStwymRhC7OyrOT1xZN-ZAtnGtlp7HGw/exec";
 let parqueoData = [];
 let nombreOperador = "";
 let pinIngresado = "";
@@ -142,3 +142,129 @@ document.getElementById('form-pago').onsubmit = async (e) => {
         showSection('ingreso');
     }
 };
+
+// --- AUTOCOMPLETADO DEL FORMULARIO DE PAGOS ---
+// Cuando el operador escribe un número de puesto, se busca en
+// parqueoData (ya cargado desde Google Sheets) y se rellenan
+// los campos de solo lectura automáticamente.
+ 
+document.getElementById('pago-puesto-num').addEventListener('input', function () {
+    const num = parseInt(this.value);
+    const puesto = parqueoData.find(p => p.id === num);
+ 
+    const campoPropietario = document.getElementById('pago-propietario');
+    const campoPlaca       = document.getElementById('pago-placa');
+    const campoModelo      = document.getElementById('pago-modelo');
+ 
+    if (puesto && puesto.ocupado) {
+        // Puesto encontrado y ocupado: rellenar con sus datos
+        campoPropietario.value = puesto.propietario || "Sin nombre";
+        campoPlaca.value       = puesto.placa       || "Sin placa";
+        campoModelo.value      = puesto.marca       || "Sin modelo";
+ 
+        // Resaltar en verde para indicar que encontró datos
+        [campoPropietario, campoPlaca, campoModelo].forEach(c => {
+            c.style.background = "#f0fff4";
+            c.style.borderColor = "#27ae60";
+        });
+ 
+    } else {
+        // Puesto no encontrado o está libre: limpiar campos
+        campoPropietario.value = "";
+        campoPlaca.value       = "";
+        campoModelo.value      = "";
+ 
+        // Volver al estilo neutral
+        [campoPropietario, campoPlaca, campoModelo].forEach(c => {
+            c.style.background = "#f0f4f8";
+            c.style.borderColor = "#edf2f7";
+        });
+    }
+});
+ 
+ 
+// --- SUBMIT DEL FORMULARIO DE PAGOS ---
+// Envía el registro de pago a Google Sheets (hoja "Control_Pagos")
+// junto con los datos autocompletados del puesto.
+ 
+document.getElementById('form-registro-pago').addEventListener('submit', async function (e) {
+    e.preventDefault();
+ 
+    const numPuesto = parseInt(document.getElementById('pago-puesto-num').value);
+    const puesto    = parqueoData.find(p => p.id === numPuesto);
+ 
+    // Validación: el puesto debe estar ocupado para registrar un pago
+    if (!puesto || !puesto.ocupado) {
+        alert("⚠️ El puesto ingresado no existe o está libre. Verificá el número.");
+        return;
+    }
+ 
+    const datos = {
+        accion:      "REGISTRAR_PAGO",
+        puesto:      numPuesto,
+        placa:       puesto.placa,
+        propietario: puesto.propietario,
+        modelo:      puesto.marca,
+        fecha:       document.getElementById('fecha-pago').value,
+        periodo:     document.getElementById('periodo-pago').value,
+        monto:       document.getElementById('monto-pago').value,
+        estatus:     "PAGADO"
+    };
+ 
+    const exito = await enviarAGoogle(datos);
+ 
+    if (exito) {
+        alert(`✅ Pago registrado para el puesto ${numPuesto} — ${puesto.propietario}`);
+        this.reset();
+        // Limpiar también los campos de solo lectura
+        ['pago-propietario', 'pago-placa', 'pago-modelo'].forEach(id => {
+            const el = document.getElementById(id);
+            el.value = "";
+            el.style.background   = "#f0f4f8";
+            el.style.borderColor  = "#edf2f7";
+        });
+        cargarHistorialPagos(); // Refrescar la lista debajo del formulario
+    }
+});
+ 
+ 
+// --- CARGAR HISTORIAL DE PAGOS ---
+// Pide al servidor los últimos pagos registrados y los muestra
+// en la lista #lista-historial-pagos.
+ 
+async function cargarHistorialPagos() {
+    try {
+        const response = await fetch(URL_GOOGLE_SCRIPT, {
+            method: 'POST',
+            body: JSON.stringify({
+                accion: "CARGAR_PAGOS",
+                pin:    pinIngresado
+            })
+        });
+        const res = await response.json();
+ 
+        const lista = document.getElementById('lista-historial-pagos');
+        lista.innerHTML = "";
+ 
+        if (res.status === "success" && res.pagos.length > 0) {
+            // Mostrar los últimos 20 pagos (los más recientes primero)
+            res.pagos.slice(-20).reverse().forEach(fila => {
+                // Orden columnas: Fecha, Puesto, Placa, Monto, Propietario, Operador, Periodo, Modelo, Estatus
+                const [fecha, puesto, placa, monto, propietario, operador, periodo] = fila;
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span><strong>Puesto ${puesto}</strong> — ${propietario} (${placa})</span>
+                    <span class="fecha-pago">${periodo} · ${fecha}</span>
+                    <span class="monto-badge">$${parseFloat(monto).toFixed(2)}</span>
+                `;
+                lista.appendChild(li);
+            });
+        } else {
+            lista.innerHTML = "<li style='padding:15px; color:#718096;'>No hay pagos registrados aún.</li>";
+        }
+ 
+    } catch (err) {
+        console.error("Error cargando historial de pagos:", err);
+    }
+}
+ 
