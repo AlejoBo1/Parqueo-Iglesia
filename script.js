@@ -5,11 +5,29 @@ let nombreOperador = "";
 let pinIngresado = "";
 
 window.onload = async () => {
-    nombreOperador = prompt("Nombre del Operador:");
-    pinIngresado = prompt("PIN de Seguridad:");
-    if (!nombreOperador || !pinIngresado) return location.reload();
+    // 1. Intentar recuperar la sesión guardada
+    nombreOperador = sessionStorage.getItem('operador');
+    pinIngresado = sessionStorage.getItem('pin');
+
+    // 2. Si NO hay sesión guardada, pedir los datos
+    if (!nombreOperador || !pinIngresado) {
+        nombreOperador = prompt("Ingrese su nombre (Operador):");
+        pinIngresado = prompt("Ingrese el PIN de seguridad:");
+
+        if (!nombreOperador || !pinIngresado) {
+            alert("Acceso denegado: Es necesario identificarse.");
+            location.reload();
+            return;
+        }
+
+        // Guardar en la memoria del navegador (se borra al cerrar la pestaña)
+        sessionStorage.setItem('operador', nombreOperador);
+        sessionStorage.setItem('pin', pinIngresado);
+    }
+
+    console.log(`👤 Sesión activa: ${nombreOperador}`);
     
-    // Mostrar operador en el header (opcional)
+    // Mostrar el nombre en la interfaz si tienes el elemento
     const elUser = document.getElementById('nombre-operador-display');
     if(elUser) elUser.innerText = nombreOperador;
 
@@ -77,12 +95,32 @@ async function registrarSalida(p) {
 }
 
 async function enviarAGoogle(datos) {
-    const res = await fetch(URL_GOOGLE_SCRIPT, {
-        method: 'POST',
-        body: JSON.stringify({ ...datos, pin: pinIngresado, operador: nombreOperador })
-    });
-    const json = await res.json();
-    return json.status === "success";
+    try {
+        // Siempre usamos las variables que ya tenemos en memoria
+        const datosConSeguridad = {
+            ...datos,
+            pin: pinIngresado,
+            operador: nombreOperador
+        };
+
+        const response = await fetch(URL_GOOGLE_SCRIPT, {
+            method: 'POST',
+            body: JSON.stringify(datosConSeguridad)
+        });
+        
+        const res = await response.json();
+        if (res.status === "error") {
+            // Si el PIN falló en el servidor, borramos la sesión y pedimos de nuevo
+            alert("❌ PIN Incorrecto. Por seguridad, identifíquese de nuevo.");
+            sessionStorage.clear();
+            location.reload();
+            return false;
+        }
+        return true;
+    } catch (err) { 
+        console.error("Error nube:", err); 
+        return false;
+    }
 }
 
 document.getElementById('form-pago').onsubmit = async (e) => {
