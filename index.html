@@ -59,22 +59,51 @@
         </form>
     </div>
 
-    <!-- Nueva sección para el control de pagos -->
+    <!-- Sección para el control de pagos -->
     <div id="registro-pagos" class="section">
         <h2>💰 Control de Pagos Mensuales/Quincenales</h2>
         <form id="form-registro-pago">
-
+ 
             <div class="form-group">
                 <label>Número de Puesto:</label>
-                <input type="number" id="pago-puesto-num" min="1" max="100" required>
+                <input type="number" id="pago-puesto-num" min="1" max="100" required placeholder="Ej: 45">
             </div>
-
+ 
+            <!-- Línea divisora visual -->
+            <hr style="border: none; border-top: 2px dashed #e2e8f0; margin: 20px 0;">
+            <p style="text-align:center; color:#718096; font-size:0.85rem; margin: -10px 0 15px;">
+                📋 Datos del contrato (se rellenan automáticamente)
+            </p>
+ 
+            <div class="form-group">
+                <label>Propietario:</label>
+                <input type="text" id="pago-propietario" readonly placeholder="— Ingresá el número de puesto —"
+                    style="background:#f0f4f8; cursor:not-allowed; color:#2c3e50; font-weight:600;">
+            </div>
+ 
+            <div class="form-group">
+                <label>Placa:</label>
+                <input type="text" id="pago-placa" readonly placeholder="— Ingresá el número de puesto —"
+                    style="background:#f0f4f8; cursor:not-allowed; color:#2c3e50; font-weight:600;">
+            </div>
+ 
+            <div class="form-group">
+                <label>Modelo / Marca:</label>
+                <input type="text" id="pago-modelo" readonly placeholder="— Ingresá el número de puesto —"
+                    style="background:#f0f4f8; cursor:not-allowed; color:#2c3e50; font-weight:600;">
+            </div>
+ 
+            <!-- Línea divisora visual -->
+            <hr style="border: none; border-top: 2px dashed #e2e8f0; margin: 20px 0;">
+            <p style="text-align:center; color:#718096; font-size:0.85rem; margin: -10px 0 15px;">
+                💵 Detalle del pago
+            </p>
+ 
             <div class="form-group">
                 <label>Fecha del Pago:</label>
                 <input type="date" id="fecha-pago" required>
             </div>
-
-            <!-- Agregado: Selección de periodo a pagar -->
+ 
             <div class="form-group">
                 <label>Periodo a Pagar:</label>
                 <select id="periodo-pago">
@@ -83,20 +112,20 @@
                     <option value="Mes Completo">Mes Completo</option>
                 </select>
             </div>
-
-            <!-- Agregado: Monto a pagar (puede ser fijo o calculado según el periodo) -->
+ 
             <div class="form-group">
                 <label for="monto-pago">Monto Recibido ($):</label>
                 <input type="number" id="monto-pago" step="0.01" required placeholder="Ej: 25.00">
             </div>
-
-            <button type="submit" class="btn-success">Registrar Pago</button>
+ 
+            <button type="submit" class="btn-success">✅ Registrar Pago</button>
         </form>
-
+ 
         <!-- Historial de pagos -->
         <h3>Últimos Pagos Registrados</h3>
         <ul id="lista-historial-pagos"></ul>
     </div>
+
 </div> <script src="script.js"></script>
 </body>
 </html>
