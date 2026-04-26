@@ -304,13 +304,15 @@ document.getElementById('pago-puesto-num').addEventListener('input', function ()
     const campoPropietario = document.getElementById('pago-propietario');
     const campoPlaca       = document.getElementById('pago-placa');
     const campoModelo      = document.getElementById('pago-modelo');
+    const campoContrato    = document.getElementById('pago-contrato');
 
     if (puesto && puesto.ocupado) {
         campoPropietario.value = puesto.propietario || "Sin nombre";
         campoPlaca.value       = puesto.placa       || "Sin placa";
         campoModelo.value      = puesto.marca        || "Sin modelo";
+        campoContrato.value    = puesto.contrato     || "Sin contrato";
 
-        [campoPropietario, campoPlaca, campoModelo].forEach(c => {
+        [campoPropietario, campoPlaca, campoModelo, campoContrato].forEach(c => {
             c.style.background  = "#f0fff4";
             c.style.borderColor = "#27ae60";
         });
@@ -319,7 +321,9 @@ document.getElementById('pago-puesto-num').addEventListener('input', function ()
         campoPlaca.value       = "";
         campoModelo.value      = "";
 
-        [campoPropietario, campoPlaca, campoModelo].forEach(c => {
+        campoContrato.value    = "";
+
+        [campoPropietario, campoPlaca, campoModelo, campoContrato].forEach(c => {
             c.style.background  = "#f0f4f8";
             c.style.borderColor = "#edf2f7";
         });
@@ -351,7 +355,7 @@ document.getElementById('form-registro-pago').addEventListener('submit', async f
     if (await enviarAGoogle(datos)) {
         alert(`✅ Pago registrado — Puesto ${numPuesto} · ${puesto.propietario}`);
         this.reset();
-        ['pago-propietario', 'pago-placa', 'pago-modelo'].forEach(id => {
+        ['pago-propietario', 'pago-placa', 'pago-modelo', 'pago-contrato'].forEach(id => {
             const el = document.getElementById(id);
             el.value             = "";
             el.style.background  = "#f0f4f8";
