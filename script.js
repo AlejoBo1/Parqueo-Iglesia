@@ -1,31 +1,182 @@
+// https://script.google.com/macros/s/AKfycby6bRprgvepD-83GJt-QhxNVmUJATWHo00Li51o-oF3WEMxflsUqLEZt1X4JhgRW5eY0A/exec
+
 const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycby6bRprgvepD-83GJt-QhxNVmUJATWHo00Li51o-oF3WEMxflsUqLEZt1X4JhgRW5eY0A/exec";
 let parqueoData = [];
 let nombreOperador = "";
 let pinIngresado = "";
 
-window.onload = async () => {
+// ============================================================
+// AUTENTICACIÓN CON MODAL
+// ============================================================
+const MAX_INTENTOS = 3;
+const BLOQUEO_MINUTOS = 5;
+let intentosFallidos = 0;
+
+window.onload = () => {
+    // Verificar si hay bloqueo activo
+    const bloqueadoHasta = sessionStorage.getItem('bloqueadoHasta');
+    if (bloqueadoHasta && Date.now() < parseInt(bloqueadoHasta)) {
+        mostrarBloqueo(parseInt(bloqueadoHasta));
+        return;
+    }
+
+    // Verificar si ya hay sesión activa
     nombreOperador = sessionStorage.getItem('operador');
     pinIngresado   = sessionStorage.getItem('pin');
 
-    if (!nombreOperador || !pinIngresado) {
-        nombreOperador = prompt("Ingrese su nombre (Operador):");
-        pinIngresado   = prompt("Ingrese el PIN de seguridad:");
+    if (nombreOperador && pinIngresado) {
+        abrirSistema();
+    }
+    // Si no hay sesión, el modal ya está visible por defecto
+};
 
-        if (!nombreOperador || !pinIngresado) {
-            alert("Acceso denegado: Es necesario identificarse.");
-            location.reload();
-            return;
+function mostrarError(mensaje) {
+    const el = document.getElementById('auth-error');
+    el.textContent = mensaje;
+    el.style.display = 'block';
+
+    // Sacudir el modal para feedback visual
+    const input = document.getElementById('auth-pin');
+    input.style.borderColor = '#e74c3c';
+    input.value = '';
+    input.focus();
+}
+
+function mostrarBloqueo(hasta) {
+    const btn = document.getElementById('auth-btn');
+    const errorEl = document.getElementById('auth-error');
+    const intentosEl = document.getElementById('auth-intentos');
+
+    btn.disabled = true;
+    btn.style.background = '#95a5a6';
+    btn.style.cursor = 'not-allowed';
+    document.getElementById('auth-nombre').disabled = true;
+    document.getElementById('auth-pin').disabled = true;
+
+    // Cuenta regresiva
+    const intervalo = setInterval(() => {
+        const restante = Math.ceil((hasta - Date.now()) / 1000);
+        if (restante <= 0) {
+            clearInterval(intervalo);
+            sessionStorage.removeItem('bloqueadoHasta');
+            intentosFallidos = 0;
+            // Rehabilitar
+            btn.disabled = false;
+            btn.style.background = '#3498db';
+            btn.style.cursor = 'pointer';
+            document.getElementById('auth-nombre').disabled = false;
+            document.getElementById('auth-pin').disabled = false;
+            errorEl.style.display = 'none';
+            intentosEl.textContent = '';
+        } else {
+            const mins = Math.floor(restante / 60);
+            const segs = restante % 60;
+            errorEl.style.display = 'block';
+            errorEl.textContent = `🔒 Acceso bloqueado`;
+            intentosEl.textContent = `Podés intentar de nuevo en ${mins}:${String(segs).padStart(2,'0')}`;
         }
+    }, 1000);
+}
 
-        sessionStorage.setItem('operador', nombreOperador);
-        sessionStorage.setItem('pin', pinIngresado);
+async function intentarAcceso() {
+    const nombre = document.getElementById('auth-nombre').value.trim();
+    const pin    = document.getElementById('auth-pin').value.trim();
+    const btn    = document.getElementById('auth-btn');
+
+    // Validación de campos vacíos
+    if (!nombre) {
+        mostrarError('⚠️ Ingresá tu nombre para continuar.');
+        document.getElementById('auth-nombre').focus();
+        return;
+    }
+    if (!pin) {
+        mostrarError('⚠️ Ingresá el PIN de seguridad.');
+        document.getElementById('auth-pin').focus();
+        return;
     }
 
+    // Estado de carga
+    btn.textContent = 'Verificando...';
+    btn.disabled = true;
+    btn.style.background = '#95a5a6';
+
+    // Validar PIN contra el servidor
+    try {
+        const response = await fetch(URL_GOOGLE_SCRIPT, {
+            method: 'POST',
+            body: JSON.stringify({ accion: "CARGAR_ESTADO", pin: pin })
+        });
+        const res = await response.json();
+
+        if (res.status === "success") {
+            // PIN correcto — guardar sesión y abrir sistema
+            sessionStorage.setItem('operador', nombre);
+            sessionStorage.setItem('pin', pin);
+            nombreOperador = nombre;
+            pinIngresado   = pin;
+
+            // Cargar datos que ya vinieron en la respuesta
+            parqueoData = res.datos.map(fila => ({
+                id:          fila[0],
+                ocupado:     fila[1] === "OCUPADO",
+                placa:       fila[2] || "",
+                propietario: fila[3] || "",
+                operador:    fila[4] || "",
+                marca:       fila[5] || "",
+                contrato:    fila[6] || ""
+            }));
+
+            abrirSistema();
+
+        } else {
+            // PIN incorrecto
+            intentosFallidos++;
+            const restantes = MAX_INTENTOS - intentosFallidos;
+
+            if (intentosFallidos >= MAX_INTENTOS) {
+                // Bloquear
+                const hasta = Date.now() + (BLOQUEO_MINUTOS * 60 * 1000);
+                sessionStorage.setItem('bloqueadoHasta', hasta);
+                mostrarBloqueo(hasta);
+            } else {
+                mostrarError(`❌ PIN incorrecto. Te quedan ${restantes} intento${restantes !== 1 ? 's' : ''}.`);
+                document.getElementById('auth-intentos').textContent =
+                    `Intento ${intentosFallidos} de ${MAX_INTENTOS}`;
+                btn.textContent = 'Ingresar al Sistema';
+                btn.disabled = false;
+                btn.style.background = '#3498db';
+            }
+        }
+    } catch (err) {
+        mostrarError('⚠️ Error de conexión. Verificá tu internet.');
+        btn.textContent = 'Ingresar al Sistema';
+        btn.disabled = false;
+        btn.style.background = '#3498db';
+    }
+}
+
+function abrirSistema() {
+    // Ocultar modal y mostrar app
+    document.getElementById('modal-auth').style.display = 'none';
+    document.getElementById('app-principal').style.display = 'block';
+
+    // Mostrar nombre del operador
     const elUser = document.getElementById('nombre-operador-display');
     if (elUser) elUser.innerText = nombreOperador;
 
-    await loadData();
-};
+    // Si los datos ya vinieron del login, solo renderizar
+    // Si no (sesión existente), cargar del servidor
+    if (parqueoData.length > 0) {
+        renderGrid();
+        updateStats();
+    } else {
+        loadData();
+    }
+}
+
+// ============================================================
+// LÓGICA PRINCIPAL DEL SISTEMA
+// ============================================================
 
 async function loadData() {
     try {
@@ -110,7 +261,7 @@ async function enviarAGoogle(datos) {
         const res = await response.json();
         if (res.status === "error") {
             if (res.message === "PIN Incorrecto") {
-                alert("❌ PIN Incorrecto. Por seguridad, identifíquese de nuevo.");
+                alert("❌ Sesión expirada. Identificate de nuevo.");
                 sessionStorage.clear();
                 location.reload();
             } else {
