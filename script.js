@@ -101,7 +101,6 @@ async function enviarAGoogle(datos) {
             ...datos,
             pin:      pinIngresado,
             operador: nombreOperador
-            // ✅ Sin fecha aquí tampoco
         };
 
         const response = await fetch(URL_GOOGLE_SCRIPT, {
@@ -111,9 +110,13 @@ async function enviarAGoogle(datos) {
 
         const res = await response.json();
         if (res.status === "error") {
-            alert("❌ PIN Incorrecto. Por seguridad, identifíquese de nuevo.");
-            sessionStorage.clear();
-            location.reload();
+            if (res.message === "PIN Incorrecto") {
+                alert("❌ PIN Incorrecto. Por seguridad, identifíquese de nuevo.");
+                sessionStorage.clear();
+                location.reload();
+            } else {
+                alert("❌ Error del servidor: " + res.message);
+            }
             return false;
         }
         return true;
