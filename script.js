@@ -1,4 +1,4 @@
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwpMf6gblVGraMTzYQoYwAIVwhONojM62lH37zy7pNqA7E_7xpOMZe5HM5AJGA3bwR49w/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwxAMljQ3DjJbZoKTCdUF6UL9GZELfVdN0XErKStwymRhC7OyrOT1xZN-ZAtnGtlp7HGw/exec";
 let parqueoData = [];
 let nombreOperador = "";
 let pinIngresado = "";
