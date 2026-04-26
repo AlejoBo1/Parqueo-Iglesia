@@ -1,4 +1,4 @@
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzi7c3UpWlTqcwbyuk9Lci3nJbsBtGl9pH_2ixrr3PPd_hWywLjlg6-Z557_yvpTD740g/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycby6bRprgvepD-83GJt-QhxNVmUJATWHo00Li51o-oF3WEMxflsUqLEZt1X4JhgRW5eY0A/exec";
 let parqueoData = [];
 let nombreOperador = "";
 let pinIngresado = "";
@@ -85,12 +85,11 @@ function irAIngreso(id) {
 async function registrarSalida(p) {
     if (!confirm(`¿Liberar puesto ${p.id}?`)) return;
     const exito = await enviarAGoogle({
-        accion: "MOVIMIENTO",
-        evento: "SALIDA",
-        puesto: p.id,
-        placa:  p.placa,
+        accion:      "MOVIMIENTO",
+        evento:      "SALIDA",
+        puesto:      p.id,
+        placa:       p.placa,
         propietario: p.propietario
-        // ✅ Sin fecha — la genera el servidor
     });
     if (exito) loadData();
 }
@@ -137,7 +136,6 @@ document.getElementById('form-pago').onsubmit = async (e) => {
         propietario: document.getElementById('nombre-usuario').value,
         marca:       document.getElementById('marca-carro').value,
         contrato:    document.getElementById('tipo-contrato').value
-        // ✅ Sin fecha — la genera el servidor
     };
     if (await enviarAGoogle(datos)) {
         alert("✅ Ingreso guardado");
@@ -158,12 +156,12 @@ document.getElementById('pago-puesto-num').addEventListener('input', function ()
 
     if (puesto && puesto.ocupado) {
         campoPropietario.value = puesto.propietario || "Sin nombre";
-        campoPlaca.value       = puesto.placa        || "Sin placa";
-        campoModelo.value      = puesto.marca         || "Sin modelo";
+        campoPlaca.value       = puesto.placa       || "Sin placa";
+        campoModelo.value      = puesto.marca        || "Sin modelo";
 
         [campoPropietario, campoPlaca, campoModelo].forEach(c => {
-            c.style.background   = "#f0fff4";
-            c.style.borderColor  = "#27ae60";
+            c.style.background  = "#f0fff4";
+            c.style.borderColor = "#27ae60";
         });
     } else {
         campoPropietario.value = "";
@@ -196,8 +194,7 @@ document.getElementById('form-registro-pago').addEventListener('submit', async f
         propietario: puesto.propietario,
         modelo:      puesto.marca,
         periodo:     document.getElementById('periodo-pago').value,
-        monto:       document.getElementById('monto-pago').value,
-        // ✅ Sin fecha — la genera el servidor
+        monto:       document.getElementById('monto-pago').value
     };
 
     if (await enviarAGoogle(datos)) {
@@ -205,8 +202,8 @@ document.getElementById('form-registro-pago').addEventListener('submit', async f
         this.reset();
         ['pago-propietario', 'pago-placa', 'pago-modelo'].forEach(id => {
             const el = document.getElementById(id);
-            el.value            = "";
-            el.style.background = "#f0f4f8";
+            el.value             = "";
+            el.style.background  = "#f0f4f8";
             el.style.borderColor = "#edf2f7";
         });
         cargarHistorialPagos();
