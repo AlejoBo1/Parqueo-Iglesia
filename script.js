@@ -1,6 +1,6 @@
-// https://script.google.com/macros/s/AKfycby6bRprgvepD-83GJt-QhxNVmUJATWHo00Li51o-oF3WEMxflsUqLEZt1X4JhgRW5eY0A/exec
+// https://script.google.com/macros/s/AKfycbxrKJe2Pt9b759rrn5ya_DhRm67E7_pboa8UPA36hB7mLlvNiYJr4aJR7CRkiY_rctP_A/exec
 
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycby6bRprgvepD-83GJt-QhxNVmUJATWHo00Li51o-oF3WEMxflsUqLEZt1X4JhgRW5eY0A/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxrKJe2Pt9b759rrn5ya_DhRm67E7_pboa8UPA36hB7mLlvNiYJr4aJR7CRkiY_rctP_A/exec";
 let parqueoData = [];
 let nombreOperador = "";
 let pinIngresado = "";
