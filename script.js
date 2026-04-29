@@ -1,6 +1,6 @@
-// https://script.google.com/macros/s/AKfycbxrKJe2Pt9b759rrn5ya_DhRm67E7_pboa8UPA36hB7mLlvNiYJr4aJR7CRkiY_rctP_A/exec
+// https://script.google.com/macros/s/AKfycbwFmM5NViAh8sNu69rICCUnHVOcpLYtsOcqayNbfbAyu4qH5SD1HkwsaYRS3oLto85yeg/exec
 
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxrKJe2Pt9b759rrn5ya_DhRm67E7_pboa8UPA36hB7mLlvNiYJr4aJR7CRkiY_rctP_A/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwFmM5NViAh8sNu69rICCUnHVOcpLYtsOcqayNbfbAyu4qH5SD1HkwsaYRS3oLto85yeg/exec";
 let parqueoData = [];
 let nombreOperador = "";
 let pinIngresado = "";
@@ -13,29 +13,34 @@ const BLOQUEO_MINUTOS = 5;
 let intentosFallidos = 0;
 
 window.onload = () => {
-    // Verificar si hay bloqueo activo
     const bloqueadoHasta = sessionStorage.getItem('bloqueadoHasta');
     if (bloqueadoHasta && Date.now() < parseInt(bloqueadoHasta)) {
         mostrarBloqueo(parseInt(bloqueadoHasta));
         return;
     }
 
-    // Verificar si ya hay sesión activa
     nombreOperador = sessionStorage.getItem('operador');
     pinIngresado   = sessionStorage.getItem('pin');
 
     if (nombreOperador && pinIngresado) {
         abrirSistema();
     }
-    // Si no hay sesión, el modal ya está visible por defecto
+
+    // Seleccionar el mes actual por defecto en el selector
+    const mesActual = new Date().getMonth(); // 0-11
+    const selectMes = document.getElementById('mes-pago');
+    if (selectMes) selectMes.selectedIndex = mesActual;
+
+    // Poner la fecha de hoy por defecto en el campo de fecha
+    const hoy = new Date().toISOString().split('T')[0];
+    const inputFecha = document.getElementById('fecha-pago');
+    if (inputFecha) inputFecha.value = hoy;
 };
 
 function mostrarError(mensaje) {
     const el = document.getElementById('auth-error');
     el.textContent = mensaje;
     el.style.display = 'block';
-
-    // Sacudir el modal para feedback visual
     const input = document.getElementById('auth-pin');
     input.style.borderColor = '#e74c3c';
     input.value = '';
@@ -43,8 +48,8 @@ function mostrarError(mensaje) {
 }
 
 function mostrarBloqueo(hasta) {
-    const btn = document.getElementById('auth-btn');
-    const errorEl = document.getElementById('auth-error');
+    const btn      = document.getElementById('auth-btn');
+    const errorEl  = document.getElementById('auth-error');
     const intentosEl = document.getElementById('auth-intentos');
 
     btn.disabled = true;
@@ -53,14 +58,12 @@ function mostrarBloqueo(hasta) {
     document.getElementById('auth-nombre').disabled = true;
     document.getElementById('auth-pin').disabled = true;
 
-    // Cuenta regresiva
     const intervalo = setInterval(() => {
         const restante = Math.ceil((hasta - Date.now()) / 1000);
         if (restante <= 0) {
             clearInterval(intervalo);
             sessionStorage.removeItem('bloqueadoHasta');
             intentosFallidos = 0;
-            // Rehabilitar
             btn.disabled = false;
             btn.style.background = '#3498db';
             btn.style.cursor = 'pointer';
@@ -83,7 +86,6 @@ async function intentarAcceso() {
     const pin    = document.getElementById('auth-pin').value.trim();
     const btn    = document.getElementById('auth-btn');
 
-    // Validación de campos vacíos
     if (!nombre) {
         mostrarError('⚠️ Ingresá tu nombre para continuar.');
         document.getElementById('auth-nombre').focus();
@@ -95,12 +97,10 @@ async function intentarAcceso() {
         return;
     }
 
-    // Estado de carga
     btn.textContent = 'Verificando...';
     btn.disabled = true;
     btn.style.background = '#95a5a6';
 
-    // Validar PIN contra el servidor
     try {
         const response = await fetch(URL_GOOGLE_SCRIPT, {
             method: 'POST',
@@ -109,13 +109,11 @@ async function intentarAcceso() {
         const res = await response.json();
 
         if (res.status === "success") {
-            // PIN correcto — guardar sesión y abrir sistema
             sessionStorage.setItem('operador', nombre);
             sessionStorage.setItem('pin', pin);
             nombreOperador = nombre;
             pinIngresado   = pin;
 
-            // Cargar datos que ya vinieron en la respuesta
             parqueoData = res.datos.map(fila => ({
                 id:          fila[0],
                 ocupado:     fila[1] === "OCUPADO",
@@ -123,18 +121,17 @@ async function intentarAcceso() {
                 propietario: fila[3] || "",
                 operador:    fila[4] || "",
                 marca:       fila[5] || "",
-                contrato:    fila[6] || ""
+                contrato:    fila[6] || "",
+                telefono:    fila[7] || ""
             }));
 
             abrirSistema();
 
         } else {
-            // PIN incorrecto
             intentosFallidos++;
             const restantes = MAX_INTENTOS - intentosFallidos;
 
             if (intentosFallidos >= MAX_INTENTOS) {
-                // Bloquear
                 const hasta = Date.now() + (BLOQUEO_MINUTOS * 60 * 1000);
                 sessionStorage.setItem('bloqueadoHasta', hasta);
                 mostrarBloqueo(hasta);
@@ -156,16 +153,21 @@ async function intentarAcceso() {
 }
 
 function abrirSistema() {
-    // Ocultar modal y mostrar app
     document.getElementById('modal-auth').style.display = 'none';
     document.getElementById('app-principal').style.display = 'block';
 
-    // Mostrar nombre del operador
     const elUser = document.getElementById('nombre-operador-display');
     if (elUser) elUser.innerText = nombreOperador;
 
-    // Si los datos ya vinieron del login, solo renderizar
-    // Si no (sesión existente), cargar del servidor
+    // Poner mes actual y fecha de hoy por defecto
+    const mesActual = new Date().getMonth();
+    const selectMes = document.getElementById('mes-pago');
+    if (selectMes) selectMes.selectedIndex = mesActual;
+
+    const hoy = new Date().toISOString().split('T')[0];
+    const inputFecha = document.getElementById('fecha-pago');
+    if (inputFecha) inputFecha.value = hoy;
+
     if (parqueoData.length > 0) {
         renderGrid();
         updateStats();
@@ -175,7 +177,7 @@ function abrirSistema() {
 }
 
 // ============================================================
-// LÓGICA PRINCIPAL DEL SISTEMA
+// LÓGICA PRINCIPAL
 // ============================================================
 
 async function loadData() {
@@ -193,7 +195,8 @@ async function loadData() {
                 propietario: fila[3] || "",
                 operador:    fila[4] || "",
                 marca:       fila[5] || "",
-                contrato:    fila[6] || ""
+                contrato:    fila[6] || "",
+                telefono:    fila[7] || ""
             }));
             renderGrid();
             updateStats();
@@ -286,7 +289,8 @@ document.getElementById('form-pago').onsubmit = async (e) => {
         placa:       document.getElementById('placa-carro').value.toUpperCase(),
         propietario: document.getElementById('nombre-usuario').value,
         marca:       document.getElementById('marca-carro').value,
-        contrato:    document.getElementById('tipo-contrato').value
+        contrato:    document.getElementById('tipo-contrato').value,
+        telefono:    document.getElementById('telefono-usuario').value
     };
     if (await enviarAGoogle(datos)) {
         alert("✅ Ingreso guardado");
@@ -320,7 +324,6 @@ document.getElementById('pago-puesto-num').addEventListener('input', function ()
         campoPropietario.value = "";
         campoPlaca.value       = "";
         campoModelo.value      = "";
-
         campoContrato.value    = "";
 
         [campoPropietario, campoPlaca, campoModelo, campoContrato].forEach(c => {
@@ -349,18 +352,30 @@ document.getElementById('form-registro-pago').addEventListener('submit', async f
         propietario: puesto.propietario,
         modelo:      puesto.marca,
         periodo:     document.getElementById('periodo-pago').value,
-        monto:       document.getElementById('monto-pago').value
+        monto:       document.getElementById('monto-pago').value,
+        fechaPago:   document.getElementById('fecha-pago').value,
+        mes:         document.getElementById('mes-pago').value,
+        comentario:  document.getElementById('comentario-pago').value.trim()
     };
 
     if (await enviarAGoogle(datos)) {
         alert(`✅ Pago registrado — Puesto ${numPuesto} · ${puesto.propietario}`);
         this.reset();
+
+        // Limpiar campos readonly
         ['pago-propietario', 'pago-placa', 'pago-modelo', 'pago-contrato'].forEach(id => {
             const el = document.getElementById(id);
             el.value             = "";
             el.style.background  = "#f0f4f8";
             el.style.borderColor = "#edf2f7";
         });
+
+        // Restaurar mes actual y fecha de hoy tras el reset
+        const selectMes = document.getElementById('mes-pago');
+        if (selectMes) selectMes.selectedIndex = new Date().getMonth();
+        const inputFecha = document.getElementById('fecha-pago');
+        if (inputFecha) inputFecha.value = new Date().toISOString().split('T')[0];
+
         cargarHistorialPagos();
     }
 });
@@ -379,11 +394,15 @@ async function cargarHistorialPagos() {
 
         if (res.status === "success" && res.pagos.length > 0) {
             res.pagos.slice(-20).reverse().forEach(fila => {
-                const [fecha, puesto, placa, monto, propietario, operador, periodo] = fila;
+                // Columnas: Fecha | Puesto | Placa | Monto | Propietario | Operador | Periodo | Modelo | Estatus | Mes | FechaPago | Comentarios
+                const [fecha, puesto, placa, monto, propietario, operador, periodo, modelo, estatus, mes, fechaPago, comentario] = fila;
                 const li = document.createElement('li');
                 li.innerHTML = `
-                    <span><strong>Puesto ${puesto}</strong> — ${propietario} (${placa})</span>
-                    <span class="fecha-pago">${periodo} · ${fecha}</span>
+                    <div style="flex:1;">
+                        <strong>Puesto ${puesto}</strong> — ${propietario} (${placa})<br>
+                        <span class="fecha-pago">${periodo} · ${mes} · ${fechaPago || fecha}</span>
+                        ${comentario ? `<br><em style="color:#718096; font-size:0.8rem;">💬 ${comentario}</em>` : ''}
+                    </div>
                     <span class="monto-badge">$${parseFloat(monto).toFixed(2)}</span>
                 `;
                 lista.appendChild(li);

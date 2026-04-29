@@ -9,7 +9,7 @@
 <body>
 
 <!-- ============================================================ -->
-<!-- MODAL DE AUTENTICACIÓN — Bloquea todo hasta autenticarse    -->
+<!-- MODAL DE AUTENTICACIÓN                                       -->
 <!-- ============================================================ -->
 <div id="modal-auth" style="
     position: fixed; inset: 0; z-index: 9999;
@@ -22,12 +22,10 @@
         box-shadow: 0 20px 60px rgba(0,0,0,0.4);
         text-align: center; margin: 20px;
     ">
-        <!-- Logo / Ícono -->
         <div style="font-size: 3rem; margin-bottom: 10px;">🚗</div>
         <h2 style="margin: 0 0 5px; color: #2c3e50;">Tabernáculo Internacional</h2>
         <p style="color: #718096; margin: 0 0 30px; font-size: 0.9rem;">Sistema de Parqueo — Acceso de Operador</p>
 
-        <!-- Campo Nombre -->
         <div style="text-align: left; margin-bottom: 16px;">
             <label style="font-weight: 600; color: #2c3e50; font-size: 0.9rem;">Nombre del Operador</label>
             <input type="text" id="auth-nombre" placeholder="Tu nombre completo"
@@ -36,7 +34,6 @@
                 onkeydown="if(event.key==='Enter') document.getElementById('auth-pin').focus()">
         </div>
 
-        <!-- Campo PIN -->
         <div style="text-align: left; margin-bottom: 8px;">
             <label style="font-weight: 600; color: #2c3e50; font-size: 0.9rem;">PIN de Seguridad</label>
             <input type="password" id="auth-pin" placeholder="••••••••"
@@ -45,34 +42,25 @@
                 onkeydown="if(event.key==='Enter') intentarAcceso()">
         </div>
 
-        <!-- Mensaje de error -->
-        <div id="auth-error" style="
-            color: #e74c3c; font-size: 0.85rem; font-weight: 600;
-            min-height: 20px; margin-bottom: 16px; display: none;
-        "></div>
+        <div id="auth-error" style="color:#e74c3c; font-size:0.85rem; font-weight:600; min-height:20px; margin-bottom:16px; display:none;"></div>
+        <div id="auth-intentos" style="color:#718096; font-size:0.8rem; margin-bottom:16px;"></div>
 
-        <!-- Indicador de intentos -->
-        <div id="auth-intentos" style="
-            color: #718096; font-size: 0.8rem; margin-bottom: 16px;
-        "></div>
-
-        <!-- Botón -->
         <button onclick="intentarAcceso()" id="auth-btn" style="
-            width: 100%; padding: 14px; background: #3498db; color: white;
-            border: none; border-radius: 8px; font-size: 1rem; font-weight: bold;
-            cursor: pointer; transition: background 0.3s;
+            width:100%; padding:14px; background:#3498db; color:white;
+            border:none; border-radius:8px; font-size:1rem; font-weight:bold;
+            cursor:pointer; transition:background 0.3s;
         ">Ingresar al Sistema</button>
     </div>
 </div>
 
 <!-- ============================================================ -->
-<!-- INTERFAZ PRINCIPAL (oculta hasta autenticarse)              -->
+<!-- INTERFAZ PRINCIPAL                                           -->
 <!-- ============================================================ -->
 <div id="app-principal" style="display:none;">
 
-    <header style="display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
+    <header style="display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
         <h1>Sistema de Parqueo Fijo - Tabernáculo Internacional</h1>
-        <div id="user-info" style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 0.9em;">
+        <div id="user-info" style="background:rgba(255,255,255,0.2); padding:5px 15px; border-radius:20px; font-size:0.9em;">
             👤 Operador: <span id="nombre-operador-display">...</span>
         </div>
     </header>
@@ -84,12 +72,15 @@
     </nav>
 
     <div class="container">
+
+        <!-- MAPA -->
         <div id="ingreso" class="section active">
             <h2>Mapa de Puestos (1-100)</h2>
             <p>Haz clic en un puesto verde para asignar o en uno rojo para liberar.</p>
             <div id="grid-container" class="grid-parqueo"></div>
         </div>
 
+        <!-- REGISTRO DE INGRESO -->
         <div id="cobros" class="section">
             <h2>Registro de Ingreso y Contrato</h2>
             <form id="form-pago">
@@ -99,15 +90,20 @@
                 </div>
                 <div class="form-group">
                     <label for="placa-carro">Número de Placa:</label>
-                    <input type="text" id="placa-carro" placeholder="P-123ABC" required style="text-transform: uppercase;">
+                    <input type="text" id="placa-carro" placeholder="P-123ABC" required style="text-transform:uppercase;">
                 </div>
                 <div class="form-group">
                     <label for="marca-carro">Marca del Carro:</label>
-                    <input type="text" id="marca-carro" placeholder="Ej: Toyota, Honda" required style="text-transform: uppercase;">
+                    <input type="text" id="marca-carro" placeholder="Ej: Toyota, Honda" required style="text-transform:uppercase;">
                 </div>
                 <div class="form-group">
                     <label for="nombre-usuario">Nombre del Propietario:</label>
-                    <input type="text" id="nombre-usuario" placeholder="Nombre completo" required style="text-transform: uppercase;">
+                    <input type="text" id="nombre-usuario" placeholder="Nombre completo" required style="text-transform:uppercase;">
+                </div>
+                <!-- NUEVO: Teléfono -->
+                <div class="form-group">
+                    <label for="telefono-usuario">Número de Teléfono:</label>
+                    <input type="tel" id="telefono-usuario" placeholder="Ej: 9999-9999" required>
                 </div>
                 <div class="form-group">
                     <label for="tipo-contrato">Tipo de Contrato:</label>
@@ -120,16 +116,18 @@
             </form>
         </div>
 
+        <!-- CONTROL DE PAGOS -->
         <div id="registro-pagos" class="section">
             <h2>💰 Control de Pagos Mensuales/Quincenales</h2>
             <form id="form-registro-pago">
+
                 <div class="form-group">
                     <label>Número de Puesto:</label>
                     <input type="number" id="pago-puesto-num" min="1" max="100" required placeholder="Ej: 45">
                 </div>
 
-                <hr style="border: none; border-top: 2px dashed #e2e8f0; margin: 20px 0;">
-                <p style="text-align:center; color:#718096; font-size:0.85rem; margin: -10px 0 15px;">
+                <hr style="border:none; border-top:2px dashed #e2e8f0; margin:20px 0;">
+                <p style="text-align:center; color:#718096; font-size:0.85rem; margin:-10px 0 15px;">
                     📋 Datos del contrato (se rellenan automáticamente)
                 </p>
 
@@ -154,10 +152,35 @@
                         style="background:#f0f4f8; cursor:not-allowed; color:#2c3e50; font-weight:600;">
                 </div>
 
-                <hr style="border: none; border-top: 2px dashed #e2e8f0; margin: 20px 0;">
-                <p style="text-align:center; color:#718096; font-size:0.85rem; margin: -10px 0 15px;">
+                <hr style="border:none; border-top:2px dashed #e2e8f0; margin:20px 0;">
+                <p style="text-align:center; color:#718096; font-size:0.85rem; margin:-10px 0 15px;">
                     💵 Detalle del pago
                 </p>
+
+                <!-- NUEVO: Fecha manual -->
+                <div class="form-group">
+                    <label for="fecha-pago">Fecha del Pago:</label>
+                    <input type="date" id="fecha-pago" required>
+                </div>
+
+                <!-- NUEVO: Mes -->
+                <div class="form-group">
+                    <label for="mes-pago">Mes que Corresponde:</label>
+                    <select id="mes-pago">
+                        <option value="Enero">Enero</option>
+                        <option value="Febrero">Febrero</option>
+                        <option value="Marzo">Marzo</option>
+                        <option value="Abril">Abril</option>
+                        <option value="Mayo">Mayo</option>
+                        <option value="Junio">Junio</option>
+                        <option value="Julio">Julio</option>
+                        <option value="Agosto">Agosto</option>
+                        <option value="Septiembre">Septiembre</option>
+                        <option value="Octubre">Octubre</option>
+                        <option value="Noviembre">Noviembre</option>
+                        <option value="Diciembre">Diciembre</option>
+                    </select>
+                </div>
 
                 <div class="form-group">
                     <label>Periodo a Pagar:</label>
@@ -172,15 +195,26 @@
                     <input type="number" id="monto-pago" step="0.01" required placeholder="Ej: 25.00">
                 </div>
 
+                <!-- NUEVO: Comentarios -->
+                <div class="form-group">
+                    <label for="comentario-pago">Comentarios (opcional):</label>
+                    <textarea id="comentario-pago" rows="3" placeholder="Ej: Pagó con cheque, debe el mes anterior..."
+                        style="width:100%; padding:12px; border:2px solid #edf2f7; border-radius:8px;
+                               box-sizing:border-box; font-family:inherit; font-size:1rem;
+                               outline:none; resize:vertical; transition:border-color 0.3s;"
+                        onfocus="this.style.borderColor='#3498db'"
+                        onblur="this.style.borderColor='#edf2f7'"></textarea>
+                </div>
+
                 <button type="submit" class="btn-success">✅ Registrar Pago</button>
             </form>
 
             <h3>Últimos Pagos Registrados</h3>
             <ul id="lista-historial-pagos"></ul>
         </div>
-    </div>
 
-</div><!-- fin #app-principal -->
+    </div>
+</div>
 
 <script src="script.js"></script>
 </body>
