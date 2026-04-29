@@ -1,6 +1,7 @@
-// https://script.google.com/macros/s/AKfycbwFmM5NViAh8sNu69rICCUnHVOcpLYtsOcqayNbfbAyu4qH5SD1HkwsaYRS3oLto85yeg/exec
+// https://script.google.com/macros/s/AKfycbzd0q3aMajWrmEaJ6_pTvqsnv3_lzifT35C8sqEISETavzOc45q3-VZTltMcQYMM8yAuA/exec
 
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwFmM5NViAh8sNu69rICCUnHVOcpLYtsOcqayNbfbAyu4qH5SD1HkwsaYRS3oLto85yeg/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzd0q3aMajWrmEaJ6_pTvqsnv3_lzifT35C8sqEISETavzOc45q3-VZTltMcQYMM8yAuA/exec";
+const TOTAL_PUESTOS = 109; // ← Cambiar este numero si el parqueo crece
 let parqueoData = [];
 let nombreOperador = "";
 let pinIngresado = "";
@@ -25,16 +26,6 @@ window.onload = () => {
     if (nombreOperador && pinIngresado) {
         abrirSistema();
     }
-
-    // Seleccionar el mes actual por defecto en el selector
-    const mesActual = new Date().getMonth(); // 0-11
-    const selectMes = document.getElementById('mes-pago');
-    if (selectMes) selectMes.selectedIndex = mesActual;
-
-    // Poner la fecha de hoy por defecto en el campo de fecha
-    const hoy = new Date().toISOString().split('T')[0];
-    const inputFecha = document.getElementById('fecha-pago');
-    if (inputFecha) inputFecha.value = hoy;
 };
 
 function mostrarError(mensaje) {
@@ -48,8 +39,8 @@ function mostrarError(mensaje) {
 }
 
 function mostrarBloqueo(hasta) {
-    const btn      = document.getElementById('auth-btn');
-    const errorEl  = document.getElementById('auth-error');
+    const btn        = document.getElementById('auth-btn');
+    const errorEl    = document.getElementById('auth-error');
     const intentosEl = document.getElementById('auth-intentos');
 
     btn.disabled = true;
@@ -159,14 +150,11 @@ function abrirSistema() {
     const elUser = document.getElementById('nombre-operador-display');
     if (elUser) elUser.innerText = nombreOperador;
 
-    // Poner mes actual y fecha de hoy por defecto
-    const mesActual = new Date().getMonth();
+    // Mes actual y fecha de hoy por defecto
     const selectMes = document.getElementById('mes-pago');
-    if (selectMes) selectMes.selectedIndex = mesActual;
-
-    const hoy = new Date().toISOString().split('T')[0];
+    if (selectMes) selectMes.selectedIndex = new Date().getMonth();
     const inputFecha = document.getElementById('fecha-pago');
-    if (inputFecha) inputFecha.value = hoy;
+    if (inputFecha) inputFecha.value = new Date().toISOString().split('T')[0];
 
     if (parqueoData.length > 0) {
         renderGrid();
@@ -215,7 +203,7 @@ function updateStats() {
     const oc = parqueoData.filter(p => p.ocupado).length;
     if (document.getElementById('stat-ocupados')) {
         document.getElementById('stat-ocupados').innerText = oc;
-        document.getElementById('stat-libres').innerText   = 100 - oc;
+        document.getElementById('stat-libres').innerText   = TOTAL_PUESTOS - oc;
     }
 }
 
@@ -345,6 +333,13 @@ document.getElementById('form-registro-pago').addEventListener('submit', async f
         return;
     }
 
+    const monto = parseFloat(document.getElementById('monto-pago').value);
+    if (isNaN(monto) || monto <= 0) {
+        alert("⚠️ El monto debe ser un número positivo.");
+        document.getElementById('monto-pago').focus();
+        return;
+    }
+
     const datos = {
         accion:      "REGISTRAR_PAGO",
         puesto:      numPuesto,
@@ -352,7 +347,7 @@ document.getElementById('form-registro-pago').addEventListener('submit', async f
         propietario: puesto.propietario,
         modelo:      puesto.marca,
         periodo:     document.getElementById('periodo-pago').value,
-        monto:       document.getElementById('monto-pago').value,
+        monto:       monto,
         fechaPago:   document.getElementById('fecha-pago').value,
         mes:         document.getElementById('mes-pago').value,
         comentario:  document.getElementById('comentario-pago').value.trim()
@@ -362,7 +357,6 @@ document.getElementById('form-registro-pago').addEventListener('submit', async f
         alert(`✅ Pago registrado — Puesto ${numPuesto} · ${puesto.propietario}`);
         this.reset();
 
-        // Limpiar campos readonly
         ['pago-propietario', 'pago-placa', 'pago-modelo', 'pago-contrato'].forEach(id => {
             const el = document.getElementById(id);
             el.value             = "";
@@ -370,7 +364,7 @@ document.getElementById('form-registro-pago').addEventListener('submit', async f
             el.style.borderColor = "#edf2f7";
         });
 
-        // Restaurar mes actual y fecha de hoy tras el reset
+        // Restaurar mes y fecha tras el reset
         const selectMes = document.getElementById('mes-pago');
         if (selectMes) selectMes.selectedIndex = new Date().getMonth();
         const inputFecha = document.getElementById('fecha-pago');
@@ -394,7 +388,6 @@ async function cargarHistorialPagos() {
 
         if (res.status === "success" && res.pagos.length > 0) {
             res.pagos.slice(-20).reverse().forEach(fila => {
-                // Columnas: Fecha | Puesto | Placa | Monto | Propietario | Operador | Periodo | Modelo | Estatus | Mes | FechaPago | Comentarios
                 const [fecha, puesto, placa, monto, propietario, operador, periodo, modelo, estatus, mes, fechaPago, comentario] = fila;
                 const li = document.createElement('li');
                 li.innerHTML = `

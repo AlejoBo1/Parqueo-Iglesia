@@ -22,7 +22,12 @@
         box-shadow: 0 20px 60px rgba(0,0,0,0.4);
         text-align: center; margin: 20px;
     ">
-        <div style="font-size: 3rem; margin-bottom: 10px;">🚗</div>
+        <!-- Logo en el login -->
+        <img src="TIJR.jpg" alt="Logo Tabernáculo Internacional"
+            style="width: 110px; height: 110px; object-fit: cover;
+                   border-radius: 50%; margin-bottom: 15px;
+                   box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+
         <h2 style="margin: 0 0 5px; color: #2c3e50;">Tabernáculo Internacional</h2>
         <p style="color: #718096; margin: 0 0 30px; font-size: 0.9rem;">Sistema de Parqueo — Acceso de Operador</p>
 
@@ -59,8 +64,14 @@
 <div id="app-principal" style="display:none;">
 
     <header style="display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
-        <h1>Sistema de Parqueo Fijo - Tabernáculo Internacional</h1>
-        <div id="user-info" style="background:rgba(255,255,255,0.2); padding:5px 15px; border-radius:20px; font-size:0.9em;">
+        <!-- Logo en el header -->
+        <div style="display:flex; align-items:center; gap:15px;">
+            <img src="TIJR.jpg" alt="Logo"
+                style="width:50px; height:50px; object-fit:cover;
+                       border-radius:50%; border:2px solid rgba(255,255,255,0.4);">
+            <h1 style="margin:0;">Sistema de Parqueo Fijo - Tabernáculo Internacional</h1>
+        </div>
+        <div id="user-info" style="background:rgba(255,255,255,0.2); padding:5px 15px; border-radius:20px; font-size:0.9em; white-space:nowrap;">
             👤 Operador: <span id="nombre-operador-display">...</span>
         </div>
     </header>
@@ -75,7 +86,7 @@
 
         <!-- MAPA -->
         <div id="ingreso" class="section active">
-            <h2>Mapa de Puestos (1-100)</h2>
+            <h2>Mapa de Puestos (1-109)</h2>
             <p>Haz clic en un puesto verde para asignar o en uno rojo para liberar.</p>
             <div id="grid-container" class="grid-parqueo"></div>
         </div>
@@ -85,8 +96,8 @@
             <h2>Registro de Ingreso y Contrato</h2>
             <form id="form-pago">
                 <div class="form-group">
-                    <label for="puesto-num">Número de Puesto Asignado (1-100):</label>
-                    <input type="number" id="puesto-num" min="1" max="100" required placeholder="Ej: 45">
+                    <label for="puesto-num">Número de Puesto Asignado (1-109):</label>
+                    <input type="number" id="puesto-num" min="1" max="109" required placeholder="Ej: 45">
                 </div>
                 <div class="form-group">
                     <label for="placa-carro">Número de Placa:</label>
@@ -100,10 +111,12 @@
                     <label for="nombre-usuario">Nombre del Propietario:</label>
                     <input type="text" id="nombre-usuario" placeholder="Nombre completo" required style="text-transform:uppercase;">
                 </div>
-                <!-- NUEVO: Teléfono -->
                 <div class="form-group">
                     <label for="telefono-usuario">Número de Teléfono:</label>
-                    <input type="tel" id="telefono-usuario" placeholder="Ej: 9999-9999" required>
+                    <!-- Solo números, sin negativos, máximo 8 dígitos -->
+                    <input type="tel" id="telefono-usuario" placeholder="Ej: 99999999"
+                        required maxlength="15"
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                 </div>
                 <div class="form-group">
                     <label for="tipo-contrato">Tipo de Contrato:</label>
@@ -123,7 +136,7 @@
 
                 <div class="form-group">
                     <label>Número de Puesto:</label>
-                    <input type="number" id="pago-puesto-num" min="1" max="100" required placeholder="Ej: 45">
+                    <input type="number" id="pago-puesto-num" min="1" max="109" required placeholder="Ej: 45">
                 </div>
 
                 <hr style="border:none; border-top:2px dashed #e2e8f0; margin:20px 0;">
@@ -157,13 +170,11 @@
                     💵 Detalle del pago
                 </p>
 
-                <!-- NUEVO: Fecha manual -->
                 <div class="form-group">
                     <label for="fecha-pago">Fecha del Pago:</label>
                     <input type="date" id="fecha-pago" required>
                 </div>
 
-                <!-- NUEVO: Mes -->
                 <div class="form-group">
                     <label for="mes-pago">Mes que Corresponde:</label>
                     <select id="mes-pago">
@@ -190,15 +201,18 @@
                         <option value="Mes Completo">Mes Completo</option>
                     </select>
                 </div>
+
                 <div class="form-group">
                     <label for="monto-pago">Monto Recibido ($):</label>
-                    <input type="number" id="monto-pago" step="0.01" required placeholder="Ej: 25.00">
+                    <!-- Sin negativos, solo positivos -->
+                    <input type="number" id="monto-pago" step="0.01" min="0.01" required placeholder="Ej: 25.00"
+                        oninput="if(this.value < 0) this.value = ''">
                 </div>
 
-                <!-- NUEVO: Comentarios -->
                 <div class="form-group">
                     <label for="comentario-pago">Comentarios (opcional):</label>
-                    <textarea id="comentario-pago" rows="3" placeholder="Ej: Pagó con cheque, debe el mes anterior..."
+                    <textarea id="comentario-pago" rows="3"
+                        placeholder="Ej: Pagó con cheque, debe el mes anterior..."
                         style="width:100%; padding:12px; border:2px solid #edf2f7; border-radius:8px;
                                box-sizing:border-box; font-family:inherit; font-size:1rem;
                                outline:none; resize:vertical; transition:border-color 0.3s;"
